@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Hotspot, RawItem, Snapshot } from '@/lib/types';
-import { BentoGrid, BentoGridItem } from './ui/bento-grid';
+import type { Hotspot, HotspotCategory, RawItem, Snapshot } from '@/lib/types';
 import { HoverBorderGradient } from './ui/hover-border-gradient';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { WobbleCard } from './ui/wobble-card';
+import { FocusCards, FocusCard } from './ui/focus-cards';
 
 const TREND_STAMP: Record<string, { text: string; cls: string }> = {
   new: { text: '新上榜', cls: 'new' },
@@ -21,6 +22,14 @@ const FILTER_LABEL: Record<TrendFilter, string> = {
   up: '↑ 走热',
   down: '↓ 降温',
 };
+
+const CATEGORY_ORDER: HotspotCategory[] = ['社会', '科技', '财经', '国际', '娱乐', '体育', '健康', '其他'];
+
+function groupByCategory(hotspots: Hotspot[]) {
+  return CATEGORY_ORDER.map((cat) => ({ cat, items: hotspots.filter((h) => h.category === cat) })).filter(
+    (g) => g.items.length > 0,
+  );
+}
 
 function TrendStamp({ trend, delta }: { trend?: string; delta?: number }) {
   if (!trend) return null;
@@ -449,22 +458,50 @@ export function GazetteBoard() {
             热点版面 · 第 {snapshot?.issue} 期
             <span className="count">{rest.length} 条</span>
           </div>
-          <BentoGrid>
-            {rest.map((hotspot, index) => (
-              <BentoGridItem key={hotspot.id} className={filter === 'all' && index === 0 ? 'md:col-span-2' : ''}>
-                <div className="story-top">
-                  <span>{hotspot.category}</span>
-                  <span>热度 {hotspot.heat}</span>
+          {groupByCategory(rest).map(({ cat, items: group }) => {
+            const [lead, ...tail] = group;
+            return (
+              <section key={cat} className="plate" aria-label={`${cat}版块`}>
+                <header className="plate-hd">
+                  <h2>
+                    <i aria-hidden />
+                    {cat}
+                  </h2>
+                  <span className="more">{group.length} 条 · 热度 {group.reduce((s, h) => s + h.heat, 0)}</span>
+                </header>
+                <div className="plate-body">
+                  <WobbleCard containerClassName="bg-[var(--paper)]">
+                    <div className="lead-meta">
+                      <span>No.{lead.rank} · 头条</span>
+                      <span>热度 {lead.heat}/100</span>
+                    </div>
+                    <h3 className="lead-title story-underline" onClick={() => setSelected(lead)}>
+                      {lead.title}
+                      <TrendStamp trend={lead.trend} delta={lead.delta} />
+                    </h3>
+                    <p className="lead-summary">{lead.summary}</p>
+                  </WobbleCard>
+                  {tail.length > 0 && (
+                    <FocusCards className="!grid-cols-1 md:!grid-cols-2 lg:!grid-cols-3">
+                      {tail.map((hotspot) => (
+                        <FocusCard key={hotspot.id}>
+                          <div className="story-top">
+                            <span>No.{hotspot.rank}</span>
+                            <span>热度 {hotspot.heat}</span>
+                          </div>
+                          <h3 className="story-title !text-[16.5px] !mt-1" onClick={() => setSelected(hotspot)}>
+                            <span className="story-underline">{hotspot.title}</span>
+                            <TrendStamp trend={hotspot.trend} delta={hotspot.delta} />
+                          </h3>
+                          <p className="story-summary !indent-0 !text-[13px]">{hotspot.summary}</p>
+                        </FocusCard>
+                      ))}
+                    </FocusCards>
+                  )}
                 </div>
-                <h3 className="story-title" onClick={() => setSelected(hotspot)}>
-                  <span className="rank-no">No.{hotspot.rank}</span>
-                  <span className="story-underline">{hotspot.title}</span>
-                  <TrendStamp trend={hotspot.trend} delta={hotspot.delta} />
-                </h3>
-                <p className="story-summary">{hotspot.summary}</p>
-              </BentoGridItem>
-            ))}
-          </BentoGrid>
+              </section>
+            );
+          })}
         </>
       )}
 

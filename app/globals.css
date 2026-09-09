@@ -638,6 +638,82 @@ button {
   margin: 0 auto;
 }
 
+/* ===== 报纸分区大板块（批 1 · 方案 B） ===== */
+.plate {
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  box-shadow: 4px 4px 0 rgba(42, 37, 29, 0.22);
+  margin-bottom: 28px;
+  overflow: hidden;
+}
+
+.plate-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  background: var(--paper-dark);
+  border-bottom: 2.5px solid var(--ink);
+}
+
+.plate-hd h2 {
+  font-size: 17px;
+  letter-spacing: 0.32em;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.plate-hd h2 i {
+  width: 6px;
+  height: 18px;
+  background: var(--red);
+  display: inline-block;
+}
+
+.plate-hd .more {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ink-faint);
+}
+
+.plate-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lead-meta {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  margin-bottom: 8px;
+}
+
+.lead-title {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.lead-title:hover {
+  color: var(--red);
+}
+
+.lead-summary {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--ink-soft);
+}
+
 /* ===== V2 分类筛选 Tabs ===== */
 .tabs {
   display: flex;
