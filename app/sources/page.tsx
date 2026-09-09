@@ -100,7 +100,7 @@ export default function SourcesPage() {
       if (!data.ok) throw new Error(data.error);
       setPostTitle('');
       setPostText('');
-      setNotice({ text: '投稿已入库，可回头版付印', ok: true });
+      setNotice({ text: '投稿已入库，可回头版「生成日报」', ok: true });
     } catch (error) {
       setNotice({ text: error instanceof Error ? error.message : String(error), ok: false });
     } finally {
@@ -115,7 +115,10 @@ export default function SourcesPage() {
         {notice && <div className={`notice ${notice.ok ? 'ok' : ''}`}>{notice.text}</div>}
 
         <section className="panel">
-          <h3>外勤采集</h3>
+          <h3>外勤采集 — 内置榜单</h3>
+          <p className="hint" style={{ marginBottom: 14, color: 'var(--ink-faint)', fontSize: 12, fontFamily: 'var(--mono)' }}>
+            按需开关榜单源；「立即走访」会拉取所有启用源 + 已启用的 RSS，一步入池
+          </p>
           <table className="ledger">
             <thead>
               <tr>
@@ -128,7 +131,7 @@ export default function SourcesPage() {
                 <tr key={s.key}>
                   <td>{s.name}</td>
                   <td>
-                    <button className="mini-btn" onClick={() => toggleSource(s.key)}>
+                    <button className="mini-btn" onClick={() => toggleSource(s.key)} aria-label={`切换${s.name}`}>
                       {enabled[s.key] ? '启用中' : '已停用'}
                     </button>
                     <i className={`lamp ${enabled[s.key] ? 'ok' : 'off'}`} />
@@ -139,16 +142,22 @@ export default function SourcesPage() {
           </table>
           <div className="toolbar">
             <button className="btn btn-primary" disabled={busy} onClick={collect}>
-              {busy ? '走访中…' : '立即走访采集'}
+              <span className="btn-stack">
+                <span>{busy ? '⟳ 走访中…' : '⟳ 立即走访'}</span>
+                <small>抓取启用源 + 全部启用 RSS</small>
+              </span>
             </button>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink-faint)' }}>
-              抓取以上启用源 + 全部启用中的 RSS
+              走访结果直接入池，回头版即可「生成日报」
             </span>
           </div>
         </section>
 
         <section className="panel">
           <h3>订阅科（RSS）</h3>
+          <p className="hint" style={{ marginBottom: 14, color: 'var(--ink-faint)', fontSize: 12, fontFamily: 'var(--mono)' }}>
+            支持任意 RSS/Atom；停用不删除，可随时恢复走访
+          </p>
           <table className="ledger">
             <thead>
               <tr>
@@ -160,7 +169,7 @@ export default function SourcesPage() {
             <tbody>
               {feeds.length === 0 && (
                 <tr>
-                  <td colSpan={3} style={{ color: 'var(--ink-faint)' }}>暂无订阅，试试下方快速添加</td>
+                  <td colSpan={3} style={{ color: 'var(--ink-faint)' }}>暂无订阅，在下方粘贴 RSS 地址即可添加</td>
                 </tr>
               )}
               {feeds.map((feed) => (
@@ -192,14 +201,14 @@ export default function SourcesPage() {
               placeholder="订阅名称（可选）"
               value={rssName}
               onChange={(e) => setRssName(e.target.value)}
-              style={{ width: 160, border: '1.5px solid var(--line)', background: 'var(--paper)', padding: '7px 10px', fontFamily: 'var(--serif)' }}
+              style={{ width: 160 }}
             />
             <input
               type="text"
               placeholder="RSS 地址，如 https://www.solidot.org/index.rss"
               value={rssUrl}
               onChange={(e) => setRssUrl(e.target.value)}
-              style={{ flex: 1, border: '1.5px solid var(--line)', background: 'var(--paper)', padding: '7px 10px', fontFamily: 'var(--serif)' }}
+              style={{ flex: 1 }}
             />
             <button
               className="btn"
@@ -213,13 +222,17 @@ export default function SourcesPage() {
 
         <section className="panel">
           <h3>读者来稿（手动投稿）</h3>
+          <p className="hint" style={{ marginBottom: 14, color: 'var(--ink-faint)', fontSize: 12, fontFamily: 'var(--mono)' }}>
+            粘贴群聊记录/推文/笔记，标题可空（自动截取前 30 字）
+          </p>
           <div className="field">
-            <label>标题（可选，留空自动截取）</label>
-            <input type="text" value={postTitle} onChange={(e) => setPostTitle(e.target.value)} />
+            <label>标题（可选）</label>
+            <input type="text" value={postTitle} onChange={(e) => setPostTitle(e.target.value)} placeholder="留空则自动截取正文开头" />
           </div>
           <div className="field">
             <label>正文 / 群聊记录 / 推文等任意文本</label>
-            <textarea rows={6} value={postText} onChange={(e) => setPostText(e.target.value)} />
+            <textarea rows={6} value={postText} onChange={(e) => setPostText(e.target.value)} placeholder="粘贴后点「递交来稿」即入池" />
+            <span className="hint">递交后回头版「生成日报」即可把来稿聚合成热点</span>
           </div>
           <button className="btn btn-primary" disabled={busy || !postText.trim()} onClick={submitPost}>
             {busy ? '递交中…' : '递交来稿'}

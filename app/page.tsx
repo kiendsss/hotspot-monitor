@@ -26,7 +26,6 @@ export default function Home() {
       <main className="page">
         <GazetteBoard />
       </main>
-      <Ticker items={items} />
     </>
   );
 }
