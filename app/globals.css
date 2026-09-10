@@ -206,8 +206,12 @@ button {
 }
 
 .extra-title:hover {
-  color: var(--red);
+  color: var(--ink);
   cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--red);
+  text-decoration-thickness: 1.8px;
+  text-underline-offset: 4px;
 }
 
 .extra-summary {
@@ -562,19 +566,26 @@ button {
   background: transparent;
 }
 
-/* ===== 提示条 ===== */
+/* ===== 提示条（V2-d 热修：不再贴边，改卡片化底色+左竖线） ===== */
 .notice {
-  border: 1.5px dashed var(--red);
-  color: var(--red);
-  padding: 9px 15px;
+  border: 1.5px solid var(--line);
+  border-left: 4px solid var(--red);
+  background: var(--paper-dark);
+  color: var(--ink);
+  padding: 11px 16px;
   font-size: 13.5px;
-  margin: 14px 0;
+  line-height: 1.7;
+  margin: 16px 2px;
+  border-radius: 6px;
   font-family: var(--mono);
+  box-shadow: 2px 2px 0 rgba(42, 37, 29, 0.12);
 }
 
 .notice.ok {
-  border-color: #2e7d32;
-  color: #2e7d32;
+  border-left-color: #2e7d32;
+  border-color: var(--line);
+  color: #1b4d1e;
+  background: #eef4e8;
 }
 
 /* ===== 表格（RSS 列表等） ===== */
@@ -704,7 +715,19 @@ button {
 }
 
 .lead-title:hover {
-  color: var(--red);
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--red);
+  text-decoration-thickness: 1.8px;
+  text-underline-offset: 4px;
+}
+
+.lead-title:focus-visible,
+.story-title:focus-visible,
+.extra-title:focus-visible {
+  outline: 1.5px solid var(--red);
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
 .lead-summary {
@@ -759,7 +782,11 @@ button {
 }
 
 .story-title:hover {
-  color: var(--red);
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--red);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
 }
 
 .story-summary {
