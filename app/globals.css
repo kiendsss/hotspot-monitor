@@ -86,6 +86,7 @@ button {
   color: var(--red);
 }
 
+/* ===== 报头（V2-m 元信息与导航间距收口） ===== */
 .masthead-meta {
   display: flex;
   justify-content: space-between;
@@ -94,8 +95,8 @@ button {
   flex-wrap: wrap;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  margin-top: 14px;
-  padding: 8px 6px;
+  margin-top: 16px;
+  padding: 10px 8px;
   font-size: 13px;
   letter-spacing: 0.12em;
   color: var(--ink-soft);
@@ -467,7 +468,7 @@ button {
   font-family: var(--mono);
 }
 
-/* ===== 悬浮分享栏 ===== */
+/* ===== 悬浮分享栏（V2-m 竖轨胶囊节奏与悬停收口） ===== */
 .share-rail {
   position: fixed;
   right: 18px;
@@ -476,6 +477,12 @@ button {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 6px;
+  border: 1px solid rgba(42, 37, 29, 0.08);
+  background: rgba(244, 239, 228, 0.92);
+  backdrop-filter: blur(6px);
+  border-radius: 12px;
+  box-shadow: 2px 2px 0 rgba(42, 37, 29, 0.08);
 }
 
 @media (max-width: 1080px) {
