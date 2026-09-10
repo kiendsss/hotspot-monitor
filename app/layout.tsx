@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN">
+      {/* 强制 zh-CN 与显式 charset，杜绝浏览器回退到 windows-1252 导致的乱码 */}
       <body>{children}</body>
     </html>
   );
