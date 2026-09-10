@@ -185,6 +185,15 @@ button {
   padding: 1px 7px;
 }
 
+/* ===== V2-k 版头胶囊（more 计数落格） ===== */
+.plate-hd .more {
+  border: 1px solid rgba(42, 37, 29, 0.25);
+  background: var(--paper);
+  color: var(--ink-soft);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
 /* ===== 号外头条（V2-h 头版与版面节奏收口） ===== */
 .extra {
   text-align: center;
@@ -645,7 +654,7 @@ button {
   color: var(--paper);
 }
 
-/* ===== 空状态（V2-h 横向呼吸与内边距收口） ===== */
+/* ===== 空状态（V2-h 横向呼吸与内边距收口；V2-k 层次收口） ===== */
 .empty-state {
   text-align: center;
   padding: 56px 24px;
@@ -653,6 +662,11 @@ button {
   background: repeating-linear-gradient(-45deg, transparent 0 14px, rgba(42, 37, 29, 0.035) 14px 15px);
   margin: 16px 2px 20px;
   border-radius: 8px;
+}
+
+.empty-state p:has(+ .btn),
+.empty-state .btn {
+  margin-top: 16px;
 }
 
 .empty-state .empty-kicker {

@@ -25,7 +25,8 @@
 | v2-g | c26b13e | V2-g notice auto-dismiss + loading empty + toolbar breathing | PASS 2026-09-10 | git checkout v2-g / diff v2-f..v2-g |
 | v2-h | 8195008 | V2-h headline + empty breathing (section/extra/panel) | PASS 2026-09-10 | git checkout v2-h / diff v2-g..v2-h |
 | v2-i | 5d7da27 | V2-i drawer/poster entrance + ESC + scroll lock | PASS 2026-09-10 | git checkout v2-i / diff v2-h..v2-i |
-| v2-j | f358dff | V2-j stamp + story-top paper style | build ok 4.1s, pending man | git diff v2-i..HEAD / checkout f358dff |
+| v2-j | 6f632ac | V2-j stamp + story-top paper style | PASS 2026-09-10 | git checkout v2-j / diff v2-i..v2-j |
+| v2-k | 3d9d748 | V2-k plate head capsule + empty level | build ok 668ms, pending man | git diff v2-j..HEAD / checkout 3d9d748 |
 
 ## Changelog files
 
@@ -41,12 +42,13 @@
 | docs/ui-changelog/v2-g.md | c26b13e | notice auto-dismiss + loading empty + toolbar breathing |
 | docs/ui-changelog/v2-h.md | 8195008 | headline/section/empty breathing |
 | docs/ui-changelog/v2-i.md | 5d7da27 | drawer/poster entrance + ESC + scroll lock |
-| docs/ui-changelog/v2-j.md | f358dff | stamp (new/up/down) + story-top dashed header |
+| docs/ui-changelog/v2-j.md | 6f632ac | stamp + story-top paper style |
+| docs/ui-changelog/v2-k.md | 3d9d748 | plate head capsule + empty level |
 
 ## How to start next version
 
 ```bash
 git status  # should be working tree clean
 # next change: edit code -> update that version's md -> git commit -> tag after man verify
-# e.g. git diff v2-j..HEAD to preview next batch
+# e.g. git diff v2-k..HEAD to preview next batch
 ```
