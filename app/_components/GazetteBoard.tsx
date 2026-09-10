@@ -348,6 +348,28 @@ export function GazetteBoard() {
     return () => clearTimeout(t);
   }, [notice]);
 
+  useEffect(() => {
+    if (!selected && !poster) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (poster) setPoster(null);
+        else setSelected(null);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [selected, poster]);
+
+  useEffect(() => {
+    const locked = !!selected || !!poster;
+    if (!locked) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [selected, poster]);
+
   const copyHeadline = async () => {
     if (!headline) return;
     const ok = await copyText(buildHotspotText(headline));
