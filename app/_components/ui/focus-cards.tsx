@@ -23,7 +23,7 @@ export function FocusCards({
         <div
           key={i}
           className={cn(
-            "flex flex-col rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-7 shadow-[2px_2px_0_rgba(42,37,29,0.12)] min-h-[148px] h-full overflow-hidden",
+            "flex flex-col rounded-2xl border border-[var(--line)] bg-[var(--paper)] px-7 py-6 sm:px-8 sm:py-7 shadow-[2px_2px_0_rgba(42,37,29,0.12)] min-h-[150px] h-full overflow-hidden",
           )}
         >
           {child}

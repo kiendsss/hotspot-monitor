@@ -765,11 +765,17 @@ button {
 }
 
 .lead-title {
-  font-size: 22px;
+  font-size: clamp(17px, 2.2vw, 23px);
   font-weight: 800;
   line-height: 1.55;
   letter-spacing: 0.04em;
   cursor: pointer;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
 }
 
 .lead-title:hover {
@@ -789,11 +795,13 @@ button {
 }
 
 .lead-summary {
-  margin-top: 14px;
+  margin-top: 0;
   font-size: 14.5px;
-  line-height: 2;
+  line-height: 1.9;
   letter-spacing: 0.02em;
   color: var(--ink-soft);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* V2-c 分区锚点目录（批 2 精修） */

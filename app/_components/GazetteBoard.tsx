@@ -530,8 +530,8 @@ export function GazetteBoard() {
                         <span>No.{lead.rank} · 头条</span>
                         <span>热度 {lead.heat}/100</span>
                       </div>
-                      <h3 className="lead-title story-underline" onClick={() => setSelected(lead)}>
-                        {lead.title}
+                      <h3 className="lead-title" onClick={() => setSelected(lead)}>
+                        <span className="story-underline min-w-0 flex-1">{lead.title}</span>
                         <TrendStamp trend={lead.trend} delta={lead.delta} />
                       </h3>
                       <p className="lead-summary">{lead.summary}</p>

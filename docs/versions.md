@@ -29,7 +29,8 @@
 | v2-k | 3f83bd2 | V2-k plate head capsule + empty level | PASS 2026-09-10 | git checkout v2-k / diff v2-j..v2-k |
 | v2-l | 40c44a5 | V2-l tabs capsule + section spacing | PASS 2026-09-10 | git checkout v2-l / diff v2-k..v2-l |
 | v2-m | df5f424 | V2-m masthead meta + share rail capsule | PASS 2026-09-10 | git checkout v2-m / diff v2-l..v2-m |
-| v2-n | 74b3618 | V2-n card adaptive: static no breathing + clamp/wrap (fix 局促) | build ok 1411ms, pending man | git diff v2-m..HEAD / checkout 74b3618 |
+| v2-n | 0969c3f | V2-n card adaptive: static no breathing + clamp/wrap (fix 局促) | PASS 2026-09-10 | git checkout v2-n / diff v2-m..v2-n |
+| v2-o | 88cd652 | V2-o card padding gap from border (fix贴边) + lead adaptive static | build ok 2.8s, pending man | git diff v2-n..HEAD / checkout 88cd652 |
 
 ## Changelog files
 
@@ -49,12 +50,13 @@
 | docs/ui-changelog/v2-k.md | 3f83bd2 | plate head capsule + empty level |
 | docs/ui-changelog/v2-l.md | 40c44a5 | tabs capsule + section spacing |
 | docs/ui-changelog/v2-m.md | df5f424 | masthead meta + share rail capsule |
-| docs/ui-changelog/v2-n.md | 74b3618 | card adaptive static + clamp/wrap |
+| docs/ui-changelog/v2-n.md | 0969c3f | card adaptive static + clamp/wrap |
+| docs/ui-changelog/v2-o.md | 88cd652 | card padding gap from border + lead adaptive |
 
 ## How to start next version
 
 ```bash
 git status  # should be working tree clean
 # next change: edit code -> update that version's md -> git commit -> tag after man verify
-# e.g. git diff v2-n..HEAD to preview next batch
+# e.g. git diff v2-o..HEAD to preview next batch
 ```
