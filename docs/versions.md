@@ -19,7 +19,7 @@
 | v1-b (no tag yet) | dd9f269 | V1-B breathing + share | man | git checkout dd9f269 |
 | v2 | 97ca9c2 (incl 41b48db) | V2 newspaper plates + Wobble lead + Focus cards (Plan B) + utf-8 fix | PASS | git checkout v2 / reset --hard v2 |
 | v2-c | bd20a45 -> eba465a | V2-c rhythm polish: plate TOC + lead red bar + spacing | PASS 2026-09-09 | git checkout v2-c |
-| v2-d (pending tag) | 564a3b6 | V2-d notice breathing + red convergence | build ok, pending man | git diff v2-c..HEAD / checkout 564a3b6 |
+| v2-d | dedf15d | V2-d notice breathing + red convergence | PASS (tag pending) | git checkout dedf15d / diff v2-c..dedf15d |
 
 ## Changelog files
 
