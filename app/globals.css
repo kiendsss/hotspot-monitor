@@ -19,6 +19,10 @@
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   background: var(--paper);
@@ -41,6 +45,7 @@ button {
 
 /* 动效熔断：尊重系统减少动态偏好 */
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
   .ticker,
   .pulse-dot::after,
   .pulse-dot::before,
@@ -50,7 +55,8 @@ button {
   .bento-card .story-underline,
   .bento-card .rank-no,
   .bento-card .stamp,
-  .extra-title.story-underline {
+  .extra-title.story-underline,
+  .plate {
     animation: none !important;
     transition: none !important;
   }
@@ -649,13 +655,27 @@ button {
   margin: 0 auto;
 }
 
-/* ===== 报纸分区大板块（批 1 · 方案 B） ===== */
+/* ===== 报纸分区大板块（批 1 · 方案 B；V2-f 呼吸精修） ===== */
 .plate {
   border: 1.5px solid var(--line);
   background: var(--paper);
   box-shadow: 4px 4px 0 rgba(42, 37, 29, 0.22);
-  margin-bottom: 28px;
+  margin-bottom: 32px;
   overflow: hidden;
+  scroll-margin-top: 88px;
+  animation: plateIn 0.42s ease both;
+}
+
+.plate:nth-of-type(1) { animation-delay: 0s; }
+.plate:nth-of-type(2) { animation-delay: 0.05s; }
+.plate:nth-of-type(3) { animation-delay: 0.1s; }
+.plate:nth-of-type(4) { animation-delay: 0.14s; }
+.plate:nth-of-type(5) { animation-delay: 0.18s; }
+.plate:nth-of-type(n+6) { animation-delay: 0.22s; }
+
+@keyframes plateIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .plate-hd {
@@ -663,7 +683,7 @@ button {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 11px 16px;
+  padding: 12px 16px;
   background: var(--paper-dark);
   border-bottom: 2.5px solid var(--ink);
 }
@@ -761,11 +781,17 @@ button {
   transition: transform 0.05s, box-shadow 0.05s;
 }
 
-.plate-toc a:hover {
+.plate-toc a:hover,
+.plate-toc a:focus-visible {
   transform: translate(1px, 1px);
   box-shadow: 1px 1px 0 var(--line);
   background: var(--ink);
   color: var(--paper);
+}
+
+.plate-toc a:focus-visible {
+  outline: 1.5px solid var(--red);
+  outline-offset: 2px;
 }
 
 .plate-toc a span {

@@ -20,7 +20,8 @@
 | v2 | 97ca9c2 (incl 41b48db) | V2 newspaper plates + Wobble lead + Focus cards (Plan B) + utf-8 fix | PASS | git checkout v2 / reset --hard v2 |
 | v2-c | eba465a (incl 5a40b7d) | V2-c rhythm polish: plate TOC + lead red bar + spacing | PASS 2026-09-09 | git checkout v2-c |
 | v2-d | dedf15d | V2-d notice breathing + title red->underline | PASS 2026-09-10 | git checkout v2-d / diff v2-c..v2-d |
-| v2-e | daeab79 | V2-e ink shadow + card breathing (fixes red shadow + tight type) | PASS 2026-09-10 | git checkout v2-e / diff v2-d..v2-e |
+| v2-e | 9084eeb | V2-e ink shadow + card breathing (fixes red shadow + tight type) | PASS 2026-09-10 | git checkout v2-e / diff v2-d..v2-e |
+| v2-f | 0bcc43c | V2-f plate breathing + stagger entrance + smooth anchors | build ok 949ms, pending man | git diff v2-e..HEAD / checkout 0bcc43c |
 
 ## Changelog files
 
