@@ -220,6 +220,8 @@ button {
   text-underline-offset: 4px;
 }
 
+.extra .extra-summary { margin-top: 18px; }
+
 .extra-summary {
   max-width: 720px;
   margin: 16px auto 0;
@@ -387,13 +389,15 @@ button {
   text-underline-offset: 3px;
 }
 
-/* ===== 操作条与按钮 ===== */
+/* ===== 操作条与按钮（V2-g 工具条与筛选留白统一） ===== */
 .toolbar {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
   flex-wrap: wrap;
-  margin: 20px 0;
+  margin: 24px 0 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(42, 37, 29, 0.12);
 }
 
 .btn {

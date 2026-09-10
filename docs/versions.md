@@ -21,7 +21,8 @@
 | v2-c | eba465a (incl 5a40b7d) | V2-c rhythm polish: plate TOC + lead red bar + spacing | PASS 2026-09-09 | git checkout v2-c |
 | v2-d | dedf15d | V2-d notice breathing + title red->underline | PASS 2026-09-10 | git checkout v2-d / diff v2-c..v2-d |
 | v2-e | 9084eeb | V2-e ink shadow + card breathing (fixes red shadow + tight type) | PASS 2026-09-10 | git checkout v2-e / diff v2-d..v2-e |
-| v2-f | 0bcc43c | V2-f plate breathing + stagger entrance + smooth anchors | build ok 949ms, pending man | git diff v2-e..HEAD / checkout 0bcc43c |
+| v2-f | ddd80c8 | V2-f plate breathing + stagger entrance + smooth anchors | PASS 2026-09-10 | git checkout v2-f / diff v2-e..v2-f |
+| v2-g | 9ae5d0b | V2-g notice auto-dismiss + loading empty + toolbar breathing | build ok 716ms, pending man | git diff v2-f..HEAD / checkout 9ae5d0b |
 
 ## Changelog files
 
@@ -32,12 +33,14 @@
 | (patch, no separate md) | 97ca9c2 | layout.tsx explicit utf-8 rewrite |
 | docs/ui-changelog/v2-c.md | 5a40b7d / eba465a | plate TOC + lead red bar + title/summary spacing |
 | docs/ui-changelog/v2-d.md | dedf15d | notice breathing + title red->underline, focus-visible |
-| docs/ui-changelog/v2-e.md | daeab79 | ink shadow (no red) + Focus/Wobble breathing + type relaxation |
+| docs/ui-changelog/v2-e.md | 9084eeb | ink shadow (no red) + Focus/Wobble breathing + type relaxation |
+| docs/ui-changelog/v2-f.md | ddd80c8 | plate breathing + stagger entrance + smooth anchors |
+| docs/ui-changelog/v2-g.md | 9ae5d0b | notice auto-dismiss + loading empty + toolbar breathing |
 
 ## How to start next version
 
 ```bash
 git status  # should be working tree clean
 # next change: edit code -> update that version's md -> git commit -> tag after man verify
-# e.g. git diff v2-e..HEAD to preview next batch
+# e.g. git diff v2-g..HEAD to preview next batch
 ```

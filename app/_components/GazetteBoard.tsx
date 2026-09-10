@@ -342,6 +342,12 @@ export function GazetteBoard() {
 
   const feedback = (text: string, ok: boolean) => setNotice({ text, ok });
 
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(null), 4000);
+    return () => clearTimeout(t);
+  }, [notice]);
+
   const copyHeadline = async () => {
     if (!headline) return;
     const ok = await copyText(buildHotspotText(headline));
@@ -431,6 +437,13 @@ export function GazetteBoard() {
             第一步：点上方「⟳ 刷新热点」抓取全网热榜入池；<br />
             第二步：点「✦ 生成日报」让 AI 聚合成第一期热点日报。
           </p>
+        </div>
+      )}
+
+      {snapshot && !headline && (
+        <div className="empty-state" aria-busy="true">
+          <div className="empty-kicker">正在开印…</div>
+          <p>日报数据加载中，请稍候；若长时间无响应，请检查 API 服务。</p>
         </div>
       )}
 
