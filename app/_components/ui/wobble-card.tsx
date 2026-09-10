@@ -41,7 +41,7 @@ export const WobbleCard = ({
         transition: "transform 0.1s ease-out",
       }}
       className={cn(
-        "mx-auto w-full relative rounded-2xl overflow-hidden border border-[var(--line)] bg-[var(--paper)] shadow-[4px_4px_0_rgba(42,37,29,0.22)]",
+        "mx-auto w-full relative rounded-2xl overflow-hidden border border-[var(--line)] bg-[var(--paper)] shadow-[3px_3px_0_rgba(42,37,29,0.16)]",
         containerClassName
       )}
     >
@@ -53,7 +53,7 @@ export const WobbleCard = ({
               : "translate3d(0px, 0px, 0) scale3d(1, 1, 1)",
             transition: "transform 0.1s ease-out",
           }}
-          className={cn("h-full p-6 md:p-8", className)}
+          className={cn("h-full p-7 md:p-9", className)}
         >
           {children}
         </motion.div>

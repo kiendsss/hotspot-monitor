@@ -691,10 +691,10 @@ button {
 }
 
 .plate-body {
-  padding: 16px;
+  padding: 22px 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 22px;
 }
 
 .lead-meta {
@@ -702,15 +702,16 @@ button {
   justify-content: space-between;
   font-family: var(--mono);
   font-size: 11px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--ink-faint);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .lead-title {
   font-size: 22px;
   font-weight: 800;
-  line-height: 1.45;
+  line-height: 1.55;
+  letter-spacing: 0.04em;
   cursor: pointer;
 }
 
@@ -731,9 +732,10 @@ button {
 }
 
 .lead-summary {
-  margin-top: 10px;
-  font-size: 14px;
-  line-height: 1.95;
+  margin-top: 14px;
+  font-size: 14.5px;
+  line-height: 2;
+  letter-spacing: 0.02em;
   color: var(--ink-soft);
 }
 
@@ -774,10 +776,11 @@ button {
 }
 
 .story-title {
-  font-size: 21px;
+  font-size: 20px;
   font-weight: 700;
-  line-height: 1.45;
-  margin: 6px 0 8px;
+  line-height: 1.5;
+  letter-spacing: 0.03em;
+  margin: 8px 0 10px;
   cursor: pointer;
 }
 
@@ -792,7 +795,9 @@ button {
 .story-summary {
   font-size: 13.5px;
   color: var(--ink-soft);
-  line-height: 1.9;
+  line-height: 1.95;
+  letter-spacing: 0.02em;
+  margin-top: 6px;
 }
 
 /* ===== V2 分类筛选 Tabs ===== */
