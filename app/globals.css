@@ -710,8 +710,62 @@ button {
 .lead-summary {
   margin-top: 10px;
   font-size: 14px;
-  line-height: 1.9;
+  line-height: 1.95;
   color: var(--ink-soft);
+}
+
+/* V2-c 分区锚点目录（批 2 精修） */
+.plate-toc {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 18px;
+}
+
+.plate-toc a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.12em;
+  padding: 5px 10px;
+  box-shadow: 2px 2px 0 var(--line);
+  transition: transform 0.05s, box-shadow 0.05s;
+}
+
+.plate-toc a:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--line);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.plate-toc a span {
+  background: var(--red);
+  color: var(--paper);
+  font-size: 10px;
+  padding: 0 5px;
+}
+
+.story-title {
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.45;
+  margin: 6px 0 8px;
+  cursor: pointer;
+}
+
+.story-title:hover {
+  color: var(--red);
+}
+
+.story-summary {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  line-height: 1.9;
 }
 
 /* ===== V2 分类筛选 Tabs ===== */

@@ -451,17 +451,36 @@ export function GazetteBoard() {
         </section>
       )}
 
-      {rest.length > 0 && (
-        <>
-          <hr className="section-rule" />
-          <div className="section-title">
-            热点版面 · 第 {snapshot?.issue} 期
-            <span className="count">{rest.length} 条</span>
-          </div>
-          {groupByCategory(rest).map(({ cat, items: group }) => {
+      {rest.length > 0 && (() => {
+        const grouped = groupByCategory(rest);
+        return (
+          <>
+            <hr className="section-rule" />
+            <div className="section-title">
+              热点版面 · 第 {snapshot?.issue} 期
+              <span className="count">{rest.length} 条 · {grouped.length} 版</span>
+            </div>
+            {grouped.length > 1 && (
+              <nav className="plate-toc" aria-label="分区快速导航">
+                {grouped.map(({ cat, items: g }) => (
+                  <a
+                    key={cat}
+                    href={`#plate-${cat}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(`plate-${cat}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                  >
+                    {cat}
+                    <span>{g.length}</span>
+                  </a>
+                ))}
+              </nav>
+            )}
+            {grouped.map(({ cat, items: group }) => {
             const [lead, ...tail] = group;
             return (
-              <section key={cat} className="plate" aria-label={`${cat}版块`}>
+              <section key={cat} id={`plate-${cat}`} className="plate" aria-label={`${cat}版块`}>
                 <header className="plate-hd">
                   <h2>
                     <i aria-hidden />
@@ -470,17 +489,19 @@ export function GazetteBoard() {
                   <span className="more">{group.length} 条 · 热度 {group.reduce((s, h) => s + h.heat, 0)}</span>
                 </header>
                 <div className="plate-body">
-                  <WobbleCard containerClassName="bg-[var(--paper)]">
-                    <div className="lead-meta">
-                      <span>No.{lead.rank} · 头条</span>
-                      <span>热度 {lead.heat}/100</span>
-                    </div>
-                    <h3 className="lead-title story-underline" onClick={() => setSelected(lead)}>
-                      {lead.title}
-                      <TrendStamp trend={lead.trend} delta={lead.delta} />
-                    </h3>
-                    <p className="lead-summary">{lead.summary}</p>
-                  </WobbleCard>
+                  <div style={{ borderLeft: '3px solid var(--red)', paddingLeft: 14, marginBottom: 2 }}>
+                    <WobbleCard containerClassName="bg-[var(--paper)]">
+                      <div className="lead-meta">
+                        <span>No.{lead.rank} · 头条</span>
+                        <span>热度 {lead.heat}/100</span>
+                      </div>
+                      <h3 className="lead-title story-underline" onClick={() => setSelected(lead)}>
+                        {lead.title}
+                        <TrendStamp trend={lead.trend} delta={lead.delta} />
+                      </h3>
+                      <p className="lead-summary">{lead.summary}</p>
+                    </WobbleCard>
+                  </div>
                   {tail.length > 0 && (
                     <FocusCards className="!grid-cols-1 md:!grid-cols-2 lg:!grid-cols-3">
                       {tail.map((hotspot) => (
@@ -489,11 +510,15 @@ export function GazetteBoard() {
                             <span>No.{hotspot.rank}</span>
                             <span>热度 {hotspot.heat}</span>
                           </div>
-                          <h3 className="story-title !text-[16.5px] !mt-1" onClick={() => setSelected(hotspot)}>
+                          <h3
+                            className="story-title !text-[16.5px] !mt-1"
+                            style={{ letterSpacing: '0.04em', lineHeight: 1.5 }}
+                            onClick={() => setSelected(hotspot)}
+                          >
                             <span className="story-underline">{hotspot.title}</span>
                             <TrendStamp trend={hotspot.trend} delta={hotspot.delta} />
                           </h3>
-                          <p className="story-summary !indent-0 !text-[13px]">{hotspot.summary}</p>
+                          <p className="story-summary !indent-0 !text-[13px] !leading-[1.9]">{hotspot.summary}</p>
                         </FocusCard>
                       ))}
                     </FocusCards>
@@ -502,8 +527,9 @@ export function GazetteBoard() {
               </section>
             );
           })}
-        </>
-      )}
+          </>
+        );
+      })()}
 
       {rest.length === 0 && snapshot && filter !== 'all' && (
         <div className="empty-state" style={{ padding: '26px 16px' }}>
