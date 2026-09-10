@@ -546,14 +546,13 @@ export function GazetteBoard() {
                             <span>热度 {hotspot.heat}</span>
                           </div>
                           <h3
-                            className="story-title !text-[16.5px] !mt-1"
-                            style={{ letterSpacing: '0.04em', lineHeight: 1.5 }}
+                            className="story-title"
                             onClick={() => setSelected(hotspot)}
                           >
-                            <span className="story-underline">{hotspot.title}</span>
+                            <span className="story-underline min-w-0 flex-1">{hotspot.title}</span>
                             <TrendStamp trend={hotspot.trend} delta={hotspot.delta} />
                           </h3>
-                          <p className="story-summary !indent-0 !text-[13px] !leading-[1.9]">{hotspot.summary}</p>
+                          <p className="story-summary">{hotspot.summary}</p>
                         </FocusCard>
                       ))}
                     </FocusCards>

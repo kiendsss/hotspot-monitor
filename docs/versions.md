@@ -28,7 +28,8 @@
 | v2-j | 6f632ac | V2-j stamp + story-top paper style | PASS 2026-09-10 | git checkout v2-j / diff v2-i..v2-j |
 | v2-k | 3f83bd2 | V2-k plate head capsule + empty level | PASS 2026-09-10 | git checkout v2-k / diff v2-j..v2-k |
 | v2-l | 40c44a5 | V2-l tabs capsule + section spacing | PASS 2026-09-10 | git checkout v2-l / diff v2-k..v2-l |
-| v2-m | e7c8132 | V2-m masthead meta + share rail capsule | build ok 703ms, pending man | git diff v2-l..HEAD / checkout e7c8132 |
+| v2-m | df5f424 | V2-m masthead meta + share rail capsule | PASS 2026-09-10 | git checkout v2-m / diff v2-l..v2-m |
+| v2-n | 74b3618 | V2-n card adaptive: static no breathing + clamp/wrap (fix 局促) | build ok 1411ms, pending man | git diff v2-m..HEAD / checkout 74b3618 |
 
 ## Changelog files
 
@@ -47,12 +48,13 @@
 | docs/ui-changelog/v2-j.md | 6f632ac | stamp + story-top paper style |
 | docs/ui-changelog/v2-k.md | 3f83bd2 | plate head capsule + empty level |
 | docs/ui-changelog/v2-l.md | 40c44a5 | tabs capsule + section spacing |
-| docs/ui-changelog/v2-m.md | e7c8132 | masthead meta + share rail capsule |
+| docs/ui-changelog/v2-m.md | df5f424 | masthead meta + share rail capsule |
+| docs/ui-changelog/v2-n.md | 74b3618 | card adaptive static + clamp/wrap |
 
 ## How to start next version
 
 ```bash
 git status  # should be working tree clean
 # next change: edit code -> update that version's md -> git commit -> tag after man verify
-# e.g. git diff v2-m..HEAD to preview next batch
+# e.g. git diff v2-n..HEAD to preview next batch
 ```

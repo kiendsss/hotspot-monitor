@@ -839,12 +839,19 @@ button {
 }
 
 .story-title {
-  font-size: 20px;
+  font-size: clamp(15px, 1.9vw, 17px);
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.55;
   letter-spacing: 0.03em;
-  margin: 8px 0 10px;
+  margin: 2px 0 0;
   cursor: pointer;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 8px;
 }
 
 .story-title:hover {
@@ -858,9 +865,26 @@ button {
 .story-summary {
   font-size: 13.5px;
   color: var(--ink-soft);
-  line-height: 1.95;
+  line-height: 1.85;
   letter-spacing: 0.02em;
-  margin-top: 6px;
+  margin-top: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .story-summary {
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+  }
 }
 
 /* V2-j 徽章与条头（TrendStamp / story-top 落格） */
