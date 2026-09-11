@@ -141,12 +141,62 @@ button {
   padding: 36px 48px 96px;
 }
 
+/* ===== V2-r 小屏报头与头条节奏（masthead/extra/empty/drawer/toolbar 收口，与 V2-q 同断点） ===== */
 @media (max-width: 720px) {
   .page {
     padding: 24px 18px 72px;
   }
   .masthead {
     padding: 22px 16px 14px;
+  }
+  .masthead h1 {
+    letter-spacing: 0.1em;
+    line-height: 1.18;
+  }
+  .masthead-meta {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    gap: 8px;
+  }
+  .nav {
+    gap: 6px;
+  }
+  .nav a {
+    padding: 4px 10px;
+  }
+  .extra {
+    padding: 30px 12px 22px;
+  }
+  .extra-kicker {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    padding: 3px 10px 3px 13px;
+    margin-bottom: 12px;
+  }
+  .extra-summary {
+    font-size: 14px;
+    line-height: 1.8;
+  }
+  .empty-state {
+    padding: 36px 16px;
+  }
+  .empty-state p {
+    font-size: 13.5px;
+    line-height: 1.9;
+  }
+  .toolbar {
+    gap: 10px;
+    margin: 16px 0 14px;
+    padding-bottom: 12px;
+  }
+  .btn-stack small {
+    font-size: 10px;
+  }
+  .drawer {
+    padding: 20px 18px;
+  }
+  .poster-modal {
+    padding: 12px;
   }
 }
 
