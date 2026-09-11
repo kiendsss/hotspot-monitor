@@ -176,6 +176,47 @@ button {
   letter-spacing: 0.4em;
   padding: 5px 16px 5px 20px;
   margin-bottom: 20px;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+/* ===== V2-q 小屏版式自适应（section-title/plate-hd/toc/ticker/plate-body 收口） ===== */
+@media (max-width: 720px) {
+  .section-title {
+    font-size: 13px;
+    letter-spacing: 0.24em;
+    padding: 5px 12px 5px 14px;
+  }
+  .section-title .count {
+    font-size: 10px;
+  }
+  .plate-hd {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .plate-hd h2 {
+    font-size: 15px;
+    letter-spacing: 0.2em;
+    gap: 8px;
+  }
+  .plate-hd .more {
+    font-size: 10px;
+    padding: 2px 7px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .plate-body {
+    padding: 16px 14px;
+    gap: 16px;
+  }
+  .plate-toc a {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+  .ticker span {
+    font-size: 11.5px;
+    margin: 0 12px;
+  }
 }
 
 .section-title .count {
