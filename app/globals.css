@@ -996,9 +996,17 @@ button {
   opacity: 0.9;
 }
 
-/* ===== V2 移动端分享条（≤1080px 显示，替代右侧悬浮栏） ===== */
+/* ===== V2 移动端分享条（V2-p 小屏自适应收口） ===== */
 .share-bottom {
   display: none;
+  gap: 8px;
+}
+
+.share-bottom .share-btn {
+  flex: 1 1 0;
+  justify-content: center;
+  min-width: 0;
+  white-space: nowrap;
 }
 
 /* ===== V2 海报预览弹窗 ===== */
