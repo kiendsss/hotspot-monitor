@@ -41,10 +41,11 @@
 collect:  added=111 filteredOut=60（微博30→30/滤20、知乎50→30/滤20、百度51→31/滤20、RSS20）
   ※ 微博首轮 filteredOut=50 全灭：接口改版 raw_hot 消失，全部 heat=undefined 被 minHeat=10万误杀
   → 修复：兼容 num 字段 + label_name/category 广告丢弃；复测 weibo count=30 filteredOut=20 ✅
-GitHub trending: 本机直连 20s 超时（疑似网络问题），本次冒烟 ok=false；失败隔离生效，不影响其他源 ✅
-  → 已临时关闭 github 源（settings），用户网络恢复后可重新启用
+GitHub trending: 首轮本机直连 20s 超时（网络抖动），失败隔离生效未影响其他源；复测恢复 ok=True count=19 ✅
 analyze:  issue=14 mock=false hotspots=20 verification={checked:30 passed:30 dropped:0 skipped:false} ✅
 快照抽查: rank1 engines=4 score=92 maxHits=67300；Bing 67300/百度网页21/百度新闻39/搜狗16404 ✅
+analyze 严格档: minEngines=2 → checked=30 passed=30 dropped=0（真实热点全部 2+ 引擎命中，已还原 minEngines=1）✅
+浏览器端到端: 头版第14期渲染正常，卡片「4源佐证」徽标 + 降温 -5 同排显示 ✅
 settings: sourceLimits + quality 读写与钳制 ✅
 tsc --noEmit ✅ / next build ✅
 ```
