@@ -8,6 +8,8 @@ interface SettingsView {
   mockMode: boolean;
   hasKey: boolean;
   openrouterKey?: string;
+  sourceLimits?: Record<string, { topN: number; minHeat: number }>;
+  quality?: { verifyEnabled: boolean; minEngines: number; minHits: number; requireCrossSource: boolean };
 }
 
 const PRESET_MODELS = [
@@ -25,6 +27,10 @@ export default function SettingsPage() {
   const [keyInput, setKeyInput] = useState('');
   const [model, setModel] = useState('');
   const [mockMode, setMockMode] = useState(true);
+  const [verifyEnabled, setVerifyEnabled] = useState(true);
+  const [minEngines, setMinEngines] = useState(1);
+  const [minHits, setMinHits] = useState(5);
+  const [requireCrossSource, setRequireCrossSource] = useState(true);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ text: string; ok: boolean } | null>(null);
 
@@ -36,6 +42,12 @@ export default function SettingsPage() {
           setSettings(d.settings);
           setModel(d.settings.model);
           setMockMode(d.settings.mockMode);
+          if (d.settings.quality) {
+            setVerifyEnabled(d.settings.quality.verifyEnabled ?? true);
+            setMinEngines(d.settings.quality.minEngines ?? 1);
+            setMinHits(d.settings.quality.minHits ?? 5);
+            setRequireCrossSource(d.settings.quality.requireCrossSource ?? true);
+          }
         }
       })
       .catch(() => {});
@@ -45,7 +57,11 @@ export default function SettingsPage() {
     setBusy(true);
     setNotice(null);
     try {
-      const body: Record<string, unknown> = { model, mockMode };
+      const body: Record<string, unknown> = {
+        model,
+        mockMode,
+        quality: { verifyEnabled, minEngines, minHits, requireCrossSource },
+      };
       if (keyInput.trim()) body.openrouterKey = keyInput.trim();
       const data = await fetch('/api/settings', {
         method: 'POST',
@@ -110,6 +126,59 @@ export default function SettingsPage() {
           <p style={{ marginTop: 14, fontSize: 13, color: 'var(--ink-faint)', lineHeight: 1.8 }}>
             获取 Key：platform.deepseek.com 或 openrouter.ai/keys
           </p>
+        </section>
+
+        <section className="panel">
+          <h3>质检科 — 搜索引擎交叉验证</h3>
+          <p className="hint" style={{ marginBottom: 14, color: 'var(--ink-faint)', fontSize: 12, fontFamily: 'var(--mono)' }}>
+            生成日报前用 Bing 网页 / 百度网页 / 百度新闻 / 搜狗网页核验候选热点的全网讨论度；不达标的候选直接淘汰，不送 AI
+          </p>
+          <div className="field">
+            <label>
+              <input
+                type="checkbox"
+                checked={verifyEnabled}
+                onChange={(e) => setVerifyEnabled(e.target.checked)}
+                style={{ marginRight: 8 }}
+              />
+              启用交叉验证（关闭 = 直接分析，尾部噪声只靠采集阈值挡）
+            </label>
+          </div>
+          <div className="field">
+            <label>最少命中引擎数（1-4）</label>
+            <input
+              type="number"
+              min={1}
+              max={4}
+              value={minEngines}
+              onChange={(e) => setMinEngines(Number(e.target.value))}
+              style={{ width: 120 }}
+            />
+            <span className="hint">默认 1：任一引擎有结果即保留；设 2 更严格</span>
+          </div>
+          <div className="field">
+            <label>最少搜索结果数</label>
+            <input
+              type="number"
+              min={0}
+              step={10}
+              value={minHits}
+              onChange={(e) => setMinHits(Number(e.target.value))}
+              style={{ width: 160 }}
+            />
+            <span className="hint">任一引擎的最大结果数低于此值即淘汰，默认 5</span>
+          </div>
+          <div className="field">
+            <label>
+              <input
+                type="checkbox"
+                checked={requireCrossSource}
+                onChange={(e) => setRequireCrossSource(e.target.checked)}
+                style={{ marginRight: 8 }}
+              />
+              无榜单热度的来稿（RSS/手动）必须多源佐证（挡「随便发一条」）
+            </label>
+          </div>
         </section>
 
         <section className="panel">

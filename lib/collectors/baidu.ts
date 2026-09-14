@@ -42,18 +42,22 @@ export async function collectBaidu(): Promise<{ items: RawItem[] }> {
   const now = Date.now();
   const items: RawItem[] = cards
     .filter((c) => c.word)
-    .map((card, index) => ({
-      id: `baidu_${now}_${index}_${card.word!.slice(0, 20)}`,
-      sourceId: 'baidu' as const,
-      sourceName: '百度热搜',
-      title: card.word!,
-      text: card.desc?.replace(/<[^>]+>/g, '').slice(0, 200),
-      url: card.url,
-      // 该接口无 hotScore 数值，用榜单位次折算热度：rank1≈100000
-      heat: card.index ? Math.max(100_000 - card.index * 2_000, 1_000) : 100_000,
-      extra: card.newHotName ?? card.labelTagName,
-      fetchedAt: now,
-    }));
+    .map((card, index) => {
+      const rank = card.index ?? index + 1;
+      return {
+        id: `baidu_${now}_${rank}_${card.word!.slice(0, 20)}`,
+        sourceId: 'baidu' as const,
+        sourceName: '百度热搜',
+        title: card.word!,
+        text: card.desc?.replace(/<[^>]+>/g, '').slice(0, 200),
+        url: card.url,
+        rank,
+        // 该接口无 hotScore 数值，用榜单位次折算热度：rank1≈100000
+        heat: Math.max(100_000 - rank * 2_000, 1_000),
+        extra: card.newHotName ?? card.labelTagName,
+        fetchedAt: now,
+      };
+    });
   if (items.length === 0) throw new Error('百度热搜接口返回为空');
   return { items };
 }

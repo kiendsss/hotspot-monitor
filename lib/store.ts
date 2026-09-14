@@ -1,6 +1,6 @@
 import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import type { DbData, RawItem, Settings, Snapshot } from './types';
+import type { DbData, QualitySettings, RawItem, Settings, Snapshot } from './types';
 
 const DATA_DIR = join(process.cwd(), 'data');
 const DB_PATH = join(DATA_DIR, 'db.json');
@@ -11,11 +11,28 @@ const MAX_ITEMS = 2000;
 /** 快照保留上限 */
 const MAX_SNAPSHOTS = 100;
 
+export const DEFAULT_SOURCE_LIMITS: Record<'weibo' | 'zhihu' | 'baidu' | 'github', { topN: number; minHeat: number }> = {
+  weibo: { topN: 30, minHeat: 100000 },
+  zhihu: { topN: 30, minHeat: 500000 },
+  baidu: { topN: 30, minHeat: 0 },
+  github: { topN: 25, minHeat: 20 },
+};
+
+export const DEFAULT_QUALITY: QualitySettings = {
+  verifyEnabled: true,
+  minEngines: 1,
+  minHits: 5,
+  requireCrossSource: true,
+  cacheTtlMs: 6 * 60 * 60 * 1000,
+};
+
 export const DEFAULT_SETTINGS: Settings = {
   model: 'deepseek/deepseek-chat',
   mockMode: true,
   rssFeeds: [],
   builtinSources: { weibo: true, zhihu: true, baidu: true, github: true },
+  sourceLimits: DEFAULT_SOURCE_LIMITS,
+  quality: DEFAULT_QUALITY,
 };
 
 export const EMPTY_DB: DbData = { items: [], snapshots: [] };

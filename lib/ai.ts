@@ -33,6 +33,8 @@ export interface AnalyzeInput {
   items: RawItem[];
   model: string;
   apiKey?: string;
+  /** 预聚合桶 key → 佐证摘要（如 [佐证:2源/引擎2个/分61]），AI 据此判断可信度 */
+  evidenceByItemId?: Map<string, string>;
 }
 
 export interface AnalyzeOutput {
@@ -58,18 +60,21 @@ const VALID_CATEGORIES: HotspotCategory[] = [
 const SYSTEM_PROMPT = `你是新闻热点分析师。根据提供的多来源内容条目，识别并聚合出 10-20 个热点话题。
 规则：
 1. 跨来源报道同一事件的条目必须合并为一个热点，itemIds 收录所有相关条目 id
-2. heat 为 0-100 综合热度：综合来源数量、平台原始热度、榜单位置
+2. heat 为 0-100 综合热度：综合来源数量、平台原始热度、榜单位置；条目自带的 [佐证] 摘要代表搜索引擎交叉验证结论，佐证分越高越可信
 3. category 必须是：社会/科技/财经/娱乐/体育/国际/健康/其他 之一
 4. sentiment 必须是：正/中/负 之一
 5. summary 为 50 字以内的中文摘要，说明事件本身
 6. entities 为 2-5 个关键实体（人名/机构/产品/地名）
-7. 只输出 JSON，不要任何其他文字`;
+7. 可信度把关：仅由单个来源、且无榜单热度（heat 为空，如 RSS/手动来稿）、且只有一条 itemIds 的候选，一律不得输出；榜单 rank 尾部（>30）的单源条目也不得单独成热点
+8. 只输出 JSON，不要任何其他文字`;
 
-function buildUserPrompt(items: RawItem[]): string {
+function buildUserPrompt(items: RawItem[], evidenceByItemId?: Map<string, string>): string {
   const lines = items.map((item) => {
     const heat = item.heat ? ` heat=${item.heat}` : '';
+    const rank = item.rank ? ` rank=${item.rank}` : '';
+    const evidence = evidenceByItemId?.get(item.id) ? ` ${evidenceByItemId.get(item.id)}` : '';
     const text = item.text ? ` | ${item.text.slice(0, MAX_TEXT_LEN)}` : '';
-    return `- id=${item.id} [${item.sourceName}] ${item.title}${heat}${text}`;
+    return `- id=${item.id} [${item.sourceName}] ${item.title}${heat}${rank}${evidence}${text}`;
   });
   return `内容条目（共 ${items.length} 条）：\n${lines.join('\n')}\n\n请输出 JSON：{"hotspots":[{"title":"...","summary":"...","category":"科技","heat":85,"entities":["..."],"sentiment":"中","itemIds":["id1","id2"]}]}`;
 }
@@ -161,7 +166,7 @@ async function analyzeWithAi(input: AnalyzeInput): Promise<AnalyzeOutput> {
   const trimmed = input.items.slice(-MAX_ITEMS_FOR_AI);
   const messages = [
     { role: 'system' as const, content: SYSTEM_PROMPT },
-    { role: 'user' as const, content: buildUserPrompt(trimmed) },
+    { role: 'user' as const, content: buildUserPrompt(trimmed, input.evidenceByItemId) },
   ];
 
   const attempt = async (useSchema: boolean) => {
@@ -196,6 +201,7 @@ async function analyzeWithAi(input: AnalyzeInput): Promise<AnalyzeOutput> {
 /**
  * Mock 分析（无 Key 时）：按来源 heat 归一化 + 跨源标题相似聚合。
  * 规则可解释、可复现，用于跑通全链路与演示。
+ * 单桶孤条且平台热度极低的尾部噪声在此淘汰，挡住「随便发一条」。
  */
 async function analyzeWithMock(input: AnalyzeInput): Promise<AnalyzeOutput> {
   const items = input.items.slice(-MAX_ITEMS_FOR_AI);
@@ -216,23 +222,30 @@ async function analyzeWithMock(input: AnalyzeInput): Promise<AnalyzeOutput> {
   }
 
   const hotspots = [...buckets.values()]
-    .map((bucket): Omit<Hotspot, 'id' | 'rank' | 'trend' | 'delta'> => {
+    .map((bucket): (Omit<Hotspot, 'id' | 'rank' | 'trend' | 'delta'> & { evidenceLine?: string }) | null => {
       const primary = bucket.reduce((a, b) => ((b.heat ?? 0) > (a.heat ?? 0) ? b : a));
       const maxHeat = bySourceMax.get(primary.sourceId) ?? 0;
       const heatFromPlatform = maxHeat > 0 ? Math.round(((primary.heat ?? 0) / maxHeat) * 80) : 0;
       const crossSourceBonus = Math.min(bucket.length * 8, 20);
+      const heat = Math.min(100, heatFromPlatform + crossSourceBonus);
+      // 单源孤条 + 无榜单热度（RSS/手动/尾部）→ 噪声淘汰
+      const isHeatless = bucket.every((b) => b.heat === undefined);
+      if (bucket.length === 1 && (isHeatless || heat < 15)) return null;
+      const evidenceLine = input.evidenceByItemId?.get(primary.id);
       return {
         title: primary.title,
-        summary: primary.text?.slice(0, 80) || `来自 ${primary.sourceName} 的热点：${primary.title}`,
+        summary: `${evidenceLine ? `${evidenceLine} ` : ''}${primary.text?.slice(0, 80) || `来自 ${primary.sourceName} 的热点：${primary.title}`}`.slice(0, 120),
         category: '其他',
-        heat: Math.min(100, heatFromPlatform + crossSourceBonus),
+        heat,
         entities: [],
         sentiment: '中' as const,
         itemIds: bucket.map((b) => b.id),
       };
     })
+    .filter((h): h is NonNullable<typeof h> => h !== null)
     .sort((a, b) => b.heat - a.heat)
-    .slice(0, 20);
+    .slice(0, 20)
+    .map(({ evidenceLine: _dropped, ...hotspot }) => hotspot);
 
   return { hotspots, model: 'mock-rules', mock: true };
 }

@@ -38,9 +38,11 @@ async function collectZhihuApi(): Promise<{ items: RawItem[] }> {
   );
   const now = Date.now();
   const items: RawItem[] = [];
-  (raw.data ?? []).forEach((entry, index) => {
+  let rank = 0;
+  for (const entry of raw.data ?? []) {
     const title = (entry.target?.title ?? '').trim();
-    if (!title) return;
+    if (!title) continue;
+    rank += 1;
     const rawUrl = entry.target?.url;
     const url = rawUrl
       ? rawUrl.replace('api.zhihu.com/questions', 'www.zhihu.com/question').replace('api.zhihu.com', 'www.zhihu.com')
@@ -53,16 +55,17 @@ async function collectZhihuApi(): Promise<{ items: RawItem[] }> {
       heat = entry.detail_text?.includes('万') ? Math.round(value * 10_000) : value;
     }
     items.push({
-      id: `zhihu_${now}_${index}_${title.slice(0, 20)}`,
+      id: `zhihu_${now}_${rank}_${title.slice(0, 20)}`,
       sourceId: 'zhihu',
       sourceName: '知乎热榜',
       title,
       text: entry.target?.excerpt?.slice(0, 200),
       url,
+      rank,
       heat,
       fetchedAt: now,
     });
-  });
+  }
   if (items.length === 0) throw new Error('知乎 API 返回为空');
   return { items };
 }
@@ -80,6 +83,7 @@ async function collectZhihuMirror(): Promise<{ items: RawItem[] }> {
     const title = link.text().trim();
     if (!title) return;
     const href = link.attr('href');
+    const rank = index + 1;
     // 热度在 td.ws（微博）或 .item-desc「677 万热度」（知乎）
     const heatText = $(el).find('td.ws').text().trim() || $(el).find('.item-desc').text().trim();
     const heatMatch = heatText.match(/([\d.]+)\s*(万)?/);
@@ -89,11 +93,12 @@ async function collectZhihuMirror(): Promise<{ items: RawItem[] }> {
       heat = heatMatch[2] ? Math.round(value * 10_000) : value;
     }
     items.push({
-      id: `zhihu_${now}_${index}_${title.slice(0, 20)}`,
+      id: `zhihu_${now}_${rank}_${title.slice(0, 20)}`,
       sourceId: 'zhihu',
       sourceName: '知乎热榜',
       title,
       url: href,
+      rank,
       heat,
       extra: index === 0 ? '置顶' : undefined,
       fetchedAt: now,

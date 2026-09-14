@@ -10,6 +10,12 @@ interface SourceStatus {
   ok: boolean;
   count: number;
   error?: string;
+  filteredOut?: number;
+}
+
+interface SourceLimit {
+  topN: number;
+  minHeat: number;
 }
 
 const BUILTIN = [
@@ -21,6 +27,7 @@ const BUILTIN = [
 
 export default function SourcesPage() {
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
+  const [limits, setLimits] = useState<Record<string, SourceLimit>>({});
   const [feeds, setFeeds] = useState<RssFeed[]>([]);
   const [rssName, setRssName] = useState('');
   const [rssUrl, setRssUrl] = useState('');
@@ -34,7 +41,10 @@ export default function SourcesPage() {
       fetch('/api/settings').then((r) => r.json()),
       fetch('/api/rss').then((r) => r.json()),
     ]);
-    if (settingsRes.ok) setEnabled(settingsRes.settings.builtinSources);
+    if (settingsRes.ok) {
+      setEnabled(settingsRes.settings.builtinSources);
+      if (settingsRes.settings.sourceLimits) setLimits(settingsRes.settings.sourceLimits);
+    }
     if (feedsRes.ok) setFeeds(feedsRes.feeds);
   }, []);
 
@@ -59,10 +69,11 @@ export default function SourcesPage() {
       const data = await fetch('/api/collect', { method: 'POST' }).then((r) => r.json());
       if (!data.ok) throw new Error(data.error);
       const failed = (data.sources as SourceStatus[]).filter((s) => !s.ok);
+      const dropped = (data.sources as SourceStatus[]).reduce((sum, s) => sum + (s.filteredOut ?? 0), 0);
       setNotice({
         text: failed.length
-          ? `新增 ${data.added} 条；失败源：${failed.map((f) => f.name).join('、')}`
-          : `走访完成：新增 ${data.added} 条，池内共 ${data.totalItems} 条（5 源全通）`,
+          ? `新增 ${data.added} 条；失败源：${failed.map((f) => f.name).join('、')}${dropped > 0 ? `；已滤除榜单尾部 ${dropped} 条` : ''}`
+          : `走访完成：新增 ${data.added} 条，池内共 ${data.totalItems} 条${dropped > 0 ? `，已滤除榜单尾部 ${dropped} 条` : ''}`,
         ok: true,
       });
     } catch (error) {
@@ -85,6 +96,33 @@ export default function SourcesPage() {
       setNotice({ text: successText, ok: true });
     } catch (error) {
       setNotice({ text: error instanceof Error ? error.message : String(error), ok: false });
+    }
+  };
+
+  const setLimit = (key: string, field: keyof SourceLimit, value: number) => {
+    setLimits((prev) => {
+      const current: SourceLimit = { topN: prev[key]?.topN ?? 30, minHeat: prev[key]?.minHeat ?? 0 };
+      current[field] = value;
+      return { ...prev, [key]: current };
+    });
+  };
+
+  const saveLimits = async () => {
+    setBusy(true);
+    setNotice(null);
+    try {
+      const data = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceLimits: limits }),
+      }).then((r) => r.json());
+      if (!data.ok) throw new Error(data.error);
+      setLimits(data.settings.sourceLimits ?? {});
+      setNotice({ text: '阈值已保存，下次走访即生效', ok: true });
+    } catch (error) {
+      setNotice({ text: error instanceof Error ? error.message : String(error), ok: false });
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -117,12 +155,14 @@ export default function SourcesPage() {
         <section className="panel">
           <h3>外勤采集 — 内置榜单</h3>
           <p className="hint" style={{ marginBottom: 14, color: 'var(--ink-faint)', fontSize: 12, fontFamily: 'var(--mono)' }}>
-            按需开关榜单源；「立即走访」会拉取所有启用源 + 已启用的 RSS，一步入池
+            按需开关榜单源；超出 TopN 或低于最低热度的尾部词条走访时直接滤除，不入池。RSS/手动来稿不受阈值限制，改由搜索引擎佐证把关
           </p>
           <table className="ledger">
             <thead>
               <tr>
                 <th>内置榜单源</th>
+                <th>保留 TopN</th>
+                <th>最低热度</th>
                 <th>状态</th>
               </tr>
             </thead>
@@ -130,6 +170,30 @@ export default function SourcesPage() {
               {BUILTIN.map((s) => (
                 <tr key={s.key}>
                   <td>{s.name}</td>
+                  <td>
+                    <input
+                      type="number"
+                      min={5}
+                      max={50}
+                      value={limits[s.key]?.topN ?? ''}
+                      placeholder="30"
+                      onChange={(e) => setLimit(s.key, 'topN', Number(e.target.value))}
+                      style={{ width: 72 }}
+                      aria-label={`${s.name}保留条数`}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      min={0}
+                      step={10000}
+                      value={limits[s.key]?.minHeat ?? ''}
+                      placeholder="0"
+                      onChange={(e) => setLimit(s.key, 'minHeat', Number(e.target.value))}
+                      style={{ width: 110 }}
+                      aria-label={`${s.name}最低热度`}
+                    />
+                  </td>
                   <td>
                     <button className="mini-btn" onClick={() => toggleSource(s.key)} aria-label={`切换${s.name}`}>
                       {enabled[s.key] ? '启用中' : '已停用'}
@@ -141,6 +205,9 @@ export default function SourcesPage() {
             </tbody>
           </table>
           <div className="toolbar">
+            <button className="btn" disabled={busy} onClick={saveLimits}>
+              保存阈值
+            </button>
             <button className="btn btn-primary" disabled={busy} onClick={collect}>
               <span className="btn-stack">
                 <span>{busy ? '⟳ 走访中…' : '⟳ 立即走访'}</span>

@@ -1,9 +1,10 @@
-import type { RawItem, Settings, SourceResult } from '../types';
+import type { RawItem, Settings, SourceId, SourceResult } from '../types';
 import { collectWeibo } from './weibo';
 import { collectZhihu } from './zhihu';
 import { collectBaidu } from './baidu';
 import { collectGithub } from './github';
 import { collectAllRss } from './rss';
+import { applyTailFilter } from './filter';
 
 interface NamedCollector {
   id: 'weibo' | 'zhihu' | 'baidu' | 'github';
@@ -22,6 +23,8 @@ const BUILTIN_COLLECTORS: NamedCollector[] = [
 export interface CollectReport {
   items: RawItem[];
   sources: SourceResult[];
+  /** 各源尾部过滤丢弃数 */
+  filteredOut: Partial<Record<SourceId, number>>;
 }
 
 /** 全量采集：内置榜单 + RSS，逐源 Promise.allSettled 失败隔离 */
@@ -43,7 +46,7 @@ export async function collectAll(settings: Settings): Promise<CollectReport> {
   }
 
   const results = await Promise.allSettled(tasks.map((t) => t.promise));
-  const items: RawItem[] = [];
+  const rawItems: RawItem[] = [];
   const sources: SourceResult[] = results.map((result, index) => {
     const task = tasks[index];
     const t0 = startedAt;
@@ -67,8 +70,15 @@ export async function collectAll(settings: Settings): Promise<CollectReport> {
   });
 
   results.forEach((result) => {
-    if (result.status === 'fulfilled') items.push(...result.value.items);
+    if (result.status === 'fulfilled') rawItems.push(...result.value.items);
   });
 
-  return { items, sources };
+  // 尾部过滤：榜单只留头部 + 热度门槛，丢弃尾部低质词条
+  const { kept: items, dropped } = applyTailFilter(rawItems, settings);
+  sources.forEach((source) => {
+    source.filteredOut = dropped[source.id] ?? 0;
+    if (source.ok) source.count = items.filter((i) => i.sourceId === source.id).length;
+  });
+
+  return { items, sources, filteredOut: dropped };
 }

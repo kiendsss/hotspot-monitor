@@ -9,7 +9,7 @@ const parser = new Parser({
   },
 });
 
-/** 解析单个 RSS 源，heat 不适用（RSS 无热度概念），置空交给 AI 评估 */
+/** 解析单个 RSS 源。RSS 没有平台热度概念，heat 留空：是否算热点完全交给搜索引擎佐证层判定 */
 export async function collectRssFeed(feed: RssFeed): Promise<{ items: RawItem[] }> {
   const parsed = await parser.parseURL(feed.url);
   const now = Date.now();
@@ -23,6 +23,8 @@ export async function collectRssFeed(feed: RssFeed): Promise<{ items: RawItem[] 
       title,
       text: contentHtml.slice(0, 300) || undefined,
       url: entry.link,
+      rank: index + 1,
+      extra: 'RSS',
       fetchedAt: now,
     };
   }).filter((i) => i.title);

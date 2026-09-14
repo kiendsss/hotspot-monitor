@@ -47,10 +47,40 @@ function TrendStamp({ trend, delta }: { trend?: string; delta?: number }) {
   );
 }
 
+function formatHits(n: number): string {
+  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}亿`;
+  if (n >= 10_000) return `${(n / 10_000).toFixed(1)}万`;
+  return String(n);
+}
+
+function EvidenceBadge({ verification }: { verification?: Hotspot['verification'] }) {
+  if (!verification) return null;
+  if (verification.reason === 'unverified') {
+    return (
+      <span className="stamp" title="搜索引擎暂不可用，本期未做交叉验证">
+        未验证
+      </span>
+    );
+  }
+  return (
+    <span
+      className={`stamp ${verification.engines >= 2 ? 'up' : 'new'}`}
+      title={`佐证分 ${verification.score}/100 · ${verification.engines} 个引擎命中 · 最多 ${formatHits(verification.maxHits)} 条结果`}
+    >
+      {verification.engines}源佐证
+    </span>
+  );
+}
+
 function buildHotspotText(hotspot: Hotspot) {
   const parts = [`【热点观察哨】${hotspot.title}`];
   if (hotspot.summary) parts.push(hotspot.summary);
   parts.push(`—— 第 ${hotspot.rank} 位 · ${hotspot.category} · 热度 ${hotspot.heat}/100`);
+  if (hotspot.verification && hotspot.verification.reason !== 'unverified') {
+    parts.push(
+      `搜索佐证：${hotspot.verification.engines} 个引擎命中，最多 ${formatHits(hotspot.verification.maxHits)} 条结果，佐证分 ${hotspot.verification.score}/100`,
+    );
+  }
   return parts.join('\n');
 }
 
@@ -238,6 +268,25 @@ function ClippingDrawer({
           No.{hotspot.rank} · {hotspot.category} · 热度 {hotspot.heat}/100 · 情感「{hotspot.sentiment}」
           {hotspot.trend && <TrendStamp trend={hotspot.trend} delta={hotspot.delta} />}
         </div>
+        {hotspot.verification && (
+          <div className="section-title" style={{ margin: '14px 0 8px' }}>搜索佐证</div>
+        )}
+        {hotspot.verification && hotspot.verification.reason === 'unverified' && (
+          <div className="source-line">本期搜索引擎不可用，未做交叉验证（不影响出刊，仅供参考）</div>
+        )}
+        {hotspot.verification && hotspot.verification.reason !== 'unverified' && (
+          <>
+            <div className="source-line">
+              综合佐证分 {hotspot.verification.score}/100 · {hotspot.verification.engines} 个引擎命中 · 合计{' '}
+              {formatHits(hotspot.verification.totalHits)} 条结果
+            </div>
+            {hotspot.verification.hits.map((hit) => (
+              <div key={hit.engine} className="source-line">
+                [{hit.engine}] {hit.ok ? (hit.total > 0 ? `约 ${formatHits(hit.total)} 条结果` : '命中但无计数') : `失败：${hit.error ?? '未知'}`}
+              </div>
+            ))}
+          </>
+        )}
         <p className="drawer-summary">{hotspot.summary || '（本条为 Mock 规则简报，暂无摘要。接入 AI 后自动补全。）'}</p>
         {hotspot.entities.length > 0 && (
           <div style={{ marginBottom: 16 }}>
@@ -322,7 +371,7 @@ export function GazetteBoard() {
       const res = await fetch(path, { method: 'POST' });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error ?? '操作失败');
-      setNotice({ text: done(data), ok: true });
+      setNotice({ text: formatActionNotice(path, data, done), ok: true });
       loadLatest();
       const itemsRes = await fetch('/api/items?limit=60');
       const itemsData = await itemsRes.json();
@@ -332,6 +381,26 @@ export function GazetteBoard() {
     } finally {
       setBusy(null);
     }
+  };
+
+  /** 采集显示尾部过滤数，日报显示验证摘要 */
+  const formatActionNotice = (
+    path: string,
+    data: Record<string, unknown>,
+    done: (data: Record<string, unknown>) => string,
+  ): string => {
+    const base = done(data);
+    if (path === '/api/collect' && typeof data.filteredOut === 'number' && data.filteredOut > 0) {
+      return `${base}（已滤除榜单尾部 ${data.filteredOut} 条）`;
+    }
+    if (path === '/api/analyze') {
+      const v = data.verification as { checked?: number; passed?: number; dropped?: number; skipped?: boolean } | undefined;
+      if (v?.skipped) return `${base}（本次搜索引擎不可用，已跳过佐证核验）`;
+      if (typeof v?.dropped === 'number' && typeof v?.passed === 'number') {
+        return `${base}（核验 ${v.checked} 候选，通过 ${v.passed}，淘汰 ${v.dropped}）`;
+      }
+    }
+    return base;
   };
 
   const headline = snapshot?.hotspots[0];
@@ -480,6 +549,7 @@ export function GazetteBoard() {
           </div>
           <p className="extra-summary">{headline.summary}</p>
           <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <EvidenceBadge verification={headline.verification} />
             <TrendStamp trend={headline.trend} delta={headline.delta} />
             <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-faint)' }}>点击标题查看剪报 / 右侧可一键分享</span>
           </div>
@@ -532,6 +602,7 @@ export function GazetteBoard() {
                       </div>
                       <h3 className="lead-title" onClick={() => setSelected(lead)}>
                         <span className="story-underline min-w-0 flex-1">{lead.title}</span>
+                        <EvidenceBadge verification={lead.verification} />
                         <TrendStamp trend={lead.trend} delta={lead.delta} />
                       </h3>
                       <p className="lead-summary">{lead.summary}</p>
@@ -550,6 +621,7 @@ export function GazetteBoard() {
                             onClick={() => setSelected(hotspot)}
                           >
                             <span className="story-underline min-w-0 flex-1">{hotspot.title}</span>
+                            <EvidenceBadge verification={hotspot.verification} />
                             <TrendStamp trend={hotspot.trend} delta={hotspot.delta} />
                           </h3>
                           <p className="story-summary">{hotspot.summary}</p>

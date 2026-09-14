@@ -8,7 +8,15 @@ interface WeiboCard {
     created_at?: string;
   };
   word_scheme?: string;
+  word?: string;
+  /** 微博 2026 改版后热度字段由 raw_hot 变为 num */
   raw_hot?: number;
+  num?: number;
+  rank?: number;
+  realpos?: number;
+  label_name?: string;
+  category?: string;
+  is_ad?: number;
 }
 
 interface WeiboHotSearchResponse {
@@ -26,23 +34,30 @@ export async function collectWeibo(): Promise<{ items: RawItem[] }> {
   const cards = raw.data?.realtime ?? [];
   const now = Date.now();
   const items: RawItem[] = [];
-  cards.forEach((card, index) => {
-    const word = card.word_scheme ?? '';
+  let rank = 0;
+  for (const card of cards) {
+    const word = card.word_scheme ?? card.word ?? '';
     const title = word.startsWith('#') ? word.slice(1) : word;
-    if (!title) return;
-    const label = card.mblog?.text?.match(/class="surl-text">([^<]+)</)?.[1];
+    if (!title) continue;
+    // 博文推广 / 商业标签直接丢弃
+    const category = card.category ?? '';
+    if (card.is_ad === 1 || /推广|商业|广告/.test(category)) continue;
+    rank += 1;
+    const heat = card.raw_hot ?? card.num ?? undefined;
+    const label = card.label_name ?? card.mblog?.text?.match(/class="surl-text">([^<]+)</)?.[1];
     items.push({
-      id: `weibo_${now}_${index}_${title.slice(0, 20)}`,
+      id: `weibo_${now}_${rank}_${title.slice(0, 20)}`,
       sourceId: 'weibo',
       sourceName: '微博热搜',
       title,
       text: card.mblog?.text?.replace(/<[^>]+>/g, '').slice(0, 200),
       url: `https://s.weibo.com/weibo?q=${encodeURIComponent(`#${title}#`)}`,
-      heat: card.raw_hot ?? undefined,
+      rank,
+      heat,
       extra: label,
       fetchedAt: now,
     });
-  });
+  }
   if (items.length === 0) {
     // 接口结构变化兜底：试抓移动端页面
     return collectWeiboMobileFallback();

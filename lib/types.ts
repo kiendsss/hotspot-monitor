@@ -6,6 +6,26 @@ export type SourceId =
   | 'rss'
   | 'manual';
 
+/** 各采集源的尾部过滤阈值：榜单只保留前 topN 条，且平台原始热度不得低于 minHeat */
+export interface SourceLimit {
+  topN: number;
+  minHeat: number;
+}
+
+/** 信息质量门槛：交叉验证与多源佐证配置 */
+export interface QualitySettings {
+  /** 是否启用搜索引擎交叉验证 */
+  verifyEnabled: boolean;
+  /** 通过验证所需的最少命中引擎数 */
+  minEngines: number;
+  /** 通过验证所需的最少搜索结果数（任一引擎） */
+  minHits: number;
+  /** 无平台热度的条目（RSS/手动）是否必须有跨源佐证 */
+  requireCrossSource: boolean;
+  /** 验证结果缓存时长（毫秒） */
+  cacheTtlMs: number;
+}
+
 export interface RawItem {
   id: string;
   sourceId: SourceId;
@@ -13,6 +33,8 @@ export interface RawItem {
   title: string;
   text?: string;
   url?: string;
+  /** 来源榜单位次（1 开始）；非榜单来源不设置 */
+  rank?: number;
   /** 平台原始热度（如微博热搜数值、知乎热度），无量纲 */
   heat?: number;
   /** 来源侧附加信息，如微博的「热/新/爆」标签、GitHub 的语言/star 数 */
@@ -44,6 +66,8 @@ export interface Hotspot {
   sentiment: '正' | '中' | '负';
   /** 指向快照内 RawItem 的 id 列表 */
   itemIds: string[];
+  /** 搜索引擎交叉验证证据（未启用验证时为空） */
+  verification?: Verification;
   trend?: TrendType;
   /** 与上一期同热点热度差值 */
   delta?: number;
@@ -56,6 +80,48 @@ export interface SourceResult {
   count: number;
   error?: string;
   costMs: number;
+  /** 尾部过滤丢弃的条目数（未启用过滤时为 0） */
+  filteredOut?: number;
+}
+
+/** 单个搜索引擎的佐证结果 */
+export interface EngineHit {
+  engine: string;
+  ok: boolean;
+  /** 搜索结果总数（解析失败时为 counted 的实际条数） */
+  total: number;
+  /** 实际抓到的结果条数 */
+  counted: number;
+  /** 结果总数是否来自“约 X 个结果”类官方计数 */
+  officialCount: boolean;
+  error?: string;
+}
+
+/** 候选热点的交叉验证证据 */
+export interface Verification {
+  /** 命中（counted > 0）的引擎数 */
+  engines: number;
+  /** 各引擎中的最大结果数 */
+  maxHits: number;
+  /** 各引擎结果数之和 */
+  totalHits: number;
+  /** 新闻引擎（百度新闻）的结果数 */
+  newsHits: number;
+  /** 综合佐证分（0-100） */
+  score: number;
+  /** 是否通过质量门槛 */
+  passed: boolean;
+  /** 未通过时的原因 */
+  reason?: string;
+  hits: EngineHit[];
+}
+
+/** 一次分析的验证统计摘要 */
+export interface VerificationSummary {
+  checked: number;
+  passed: number;
+  dropped: number;
+  skipped: boolean;
 }
 
 export interface Snapshot {
@@ -67,6 +133,8 @@ export interface Snapshot {
   mock: boolean;
   sources: SourceResult[];
   hotspots: Hotspot[];
+  /** 交叉验证统计（未启用验证时 skipped=true） */
+  verificationSummary?: VerificationSummary;
 }
 
 export interface RssFeed {
@@ -84,6 +152,10 @@ export interface Settings {
   rssFeeds: RssFeed[];
   /** 内置榜单源开关 */
   builtinSources: Record<'weibo' | 'zhihu' | 'baidu' | 'github', boolean>;
+  /** 各源尾部过滤阈值（缺失时用 DEFAULT_SOURCE_LIMITS） */
+  sourceLimits?: Partial<Record<'weibo' | 'zhihu' | 'baidu' | 'github', SourceLimit>>;
+  /** 信息质量门槛（缺失时用 DEFAULT_QUALITY） */
+  quality?: QualitySettings;
 }
 
 export interface DbData {
