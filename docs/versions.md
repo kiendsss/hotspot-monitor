@@ -35,6 +35,7 @@
 | v2-q | 0f0c4be | V2-q small-screen plate rhythm (720px) | PASS 2026-09-11 | git checkout v2-q / diff v2-p..v2-q |
 | v2-r | 3671f7e | V2-r small-screen masthead & extra rhythm (720px) | build ok 1275ms, pending man | git diff v2-q..HEAD / checkout 3671f7e |
 | v3 | c955bfe (code f22ecc7) | Loop5 source reliability: per-source tail filter (TopN+minHeat) + 4-engine search verification (Bing web / Baidu web / Baidu news / Sogou) + evidence badges & drawer | smoke PASS 2026-09-14 | git checkout v3 / diff v2-r..v3 |
+| v3-a (no tag yet) | working tree | Info density: publishedAt/fetchedAt/interactions on cards + AI relevance score & collapsible reason (interestKeywords in settings) + per-source candidate quota + AI itemId fallback | tsc+build+e2e PASS 2026-09-15 | git diff v3..HEAD / reset --hard v3 |
 
 ## Changelog files
 
@@ -59,6 +60,7 @@
 | docs/ui-changelog/v2-p.md | 43f632c | mobile share bar equal fit |
 | docs/ui-changelog/v2-q.md | 0f0c4be | small-screen plate rhythm (720px) |
 | docs/ui-changelog/v2-r.md | 3671f7e | small-screen masthead & extra rhythm (720px) |
+| docs/ui-changelog/v3-a.md | working tree | publishedAt/interactions/relevance+reason + source quota + id fallback (no commit yet) |
 
 ## How to start next version
 

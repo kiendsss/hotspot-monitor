@@ -39,7 +39,19 @@ export interface RawItem {
   heat?: number;
   /** 来源侧附加信息，如微博的「热/新/爆」标签、GitHub 的语言/star 数 */
   extra?: string;
+  /** 内容发布时间（毫秒时间戳）；榜单接口多数不提供，RSS/微博部分条目有 */
+  publishedAt?: number;
+  /** 平台互动数据，仅有接口直接返回时填充，不做回抓补齐 */
+  interactions?: ItemInteractions;
   fetchedAt: number;
+}
+
+export interface ItemInteractions {
+  likes?: number;
+  replies?: number;
+  reposts?: number;
+  /** 无法拆分时的原始口径描述，如「今日 +1234 star」 */
+  raw?: string;
 }
 
 export type HotspotCategory =
@@ -71,6 +83,26 @@ export interface Hotspot {
   trend?: TrendType;
   /** 与上一期同热点热度差值 */
   delta?: number;
+  /** 与用户兴趣关键词的相关度 0-100（未配置兴趣词时缺失） */
+  relevance?: number;
+  /** AI 给出的相关度理由：引用命中关键词与来源佐证，一句话 */
+  relevanceReason?: string;
+  /** 出刊时从原始条目聚合的时间/来源/互动摘要，头版卡片直接展示免跳转 */
+  meta?: HotspotMeta;
+}
+
+/** 热点元信息聚合：来自成员条目的时间、来源分布与互动总量 */
+export interface HotspotMeta {
+  /** 成员条目中最早的发布时间；榜单源多数不提供 */
+  publishedAt?: number;
+  /** 本项目首次抓取到该热点的时间 */
+  firstFetchedAt?: number;
+  /** 本项目最近一次抓取时间 */
+  lastFetchedAt?: number;
+  /** 来源分布明细，如 微博热搜2 · 知乎热榜1 */
+  sources?: { name: string; count: number }[];
+  /** 各条目互动数求和（仅对提供了该字段的条目累加） */
+  interactions?: ItemInteractions;
 }
 
 export interface SourceResult {
@@ -156,6 +188,8 @@ export interface Settings {
   sourceLimits?: Partial<Record<'weibo' | 'zhihu' | 'baidu' | 'github', SourceLimit>>;
   /** 信息质量门槛（缺失时用 DEFAULT_QUALITY） */
   quality?: QualitySettings;
+  /** 用户兴趣关键词：AI 据此给出 relevance 相关度与理由 */
+  interestKeywords?: string[];
 }
 
 export interface DbData {

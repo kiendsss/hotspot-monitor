@@ -47,10 +47,127 @@ function TrendStamp({ trend, delta }: { trend?: string; delta?: number }) {
   );
 }
 
+function RelevanceBadge({ hotspot }: { hotspot: Hotspot }) {
+  if (typeof hotspot.relevance !== 'number') return null;
+  return (
+    <span
+      className={`stamp ${hotspot.relevance >= 60 ? 'up' : ''}`}
+      title={hotspot.relevanceReason ?? 'AI 按兴趣关键词打分'}
+    >
+      相关 {hotspot.relevance}
+    </span>
+  );
+}
+
+/** AI 相关度理由：支持单条展开折叠，受全局 expandAll 控制 */
+function RelevanceReason({
+  hotspot,
+  open,
+  onToggle,
+}: {
+  hotspot: Hotspot;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  if (typeof hotspot.relevance !== 'number' || !hotspot.relevanceReason) return null;
+  return (
+    <div className="reason-row">
+      <button
+        className="reason-toggle"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        aria-expanded={open}
+      >
+        {open ? '▾ 收起相关理由' : '▸ 相关理由'}
+      </button>
+      {open && (
+        <div className="reason-body">
+          相关度 {hotspot.relevance}/100 · {hotspot.relevanceReason}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function formatHits(n: number): string {
   if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}亿`;
   if (n >= 10_000) return `${(n / 10_000).toFixed(1)}万`;
   return String(n);
+}
+
+/** 相对时间：x 分钟/小时/天前，超过 7 天显示日期 */
+function formatRelativeTime(ts?: number): string | null {
+  if (!ts) return null;
+  const diff = Date.now() - ts;
+  if (diff < 0) return new Date(ts).toLocaleString('zh-CN');
+  const minutes = Math.floor(diff / 60_000);
+  if (minutes < 1) return '刚刚';
+  if (minutes < 60) return `${minutes} 分钟前`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} 小时前`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} 天前`;
+  return new Date(ts).toLocaleString('zh-CN');
+}
+
+/** 发布时间 + 抓取时间一行：缺失发布时间时标注榜单未提供 */
+function TimeMeta({ publishedAt, fetchedAt }: { publishedAt?: number; fetchedAt?: number }) {
+  const pub = formatRelativeTime(publishedAt);
+  const grab = formatRelativeTime(fetchedAt);
+  return (
+    <div className="source-line" style={{ marginTop: 6 }}>
+      发布：{pub ? `${pub}（${new Date(publishedAt!).toLocaleString('zh-CN')}）` : '榜单未提供'}
+      {grab ? ` · 抓取：${grab}` : ''}
+    </div>
+  );
+}
+
+/** 互动数据行：仅有所返回字段才渲染 */
+function InteractionMeta({ item }: { item: RawItem }) {
+  const parts: string[] = [];
+  if (typeof item.interactions?.likes === 'number') parts.push(`赞 ${formatHits(item.interactions.likes)}`);
+  if (typeof item.interactions?.reposts === 'number') parts.push(`转 ${formatHits(item.interactions.reposts)}`);
+  if (typeof item.interactions?.replies === 'number') parts.push(`评 ${formatHits(item.interactions.replies)}`);
+  if (item.interactions?.raw) parts.push(item.interactions.raw);
+  if (parts.length === 0) return null;
+  return <div className="source-line">互动：{parts.join(' · ')}</div>;
+}
+
+/** 来源分布明细：优先用出刊聚合的 meta，抽屉内无 meta 时按 linked 现算 */
+function formatSourceSpread(sources: { name: string; count: number }[]): string {
+  return sources.map((s) => `${s.name.replace(/热搜|热榜|订阅|Trending/g, '')}×${s.count}`).join(' · ');
+}
+
+/** 头版卡片元信息行：发布/首抓时间 + 来源分布 + 互动合计，仅渲染有值的字段 */
+function CardMeta({ hotspot }: { hotspot: Hotspot }) {
+  const meta = hotspot.meta;
+  if (!meta) return null;
+  const parts: string[] = [];
+  const pub = formatRelativeTime(meta.publishedAt);
+  if (pub) parts.push(`发布 ${pub}`);
+  if (meta.firstFetchedAt) parts.push(`首抓 ${new Date(meta.firstFetchedAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`);
+  if (meta.sources && meta.sources.length > 0) parts.push(formatSourceSpread(meta.sources));
+  const ia: string[] = [];
+  if (meta.interactions?.likes) ia.push(`赞 ${formatHits(meta.interactions.likes)}`);
+  if (meta.interactions?.replies) ia.push(`评 ${formatHits(meta.interactions.replies)}`);
+  if (meta.interactions?.reposts) ia.push(`转 ${formatHits(meta.interactions.reposts)}`);
+  if (ia.length === 0 && meta.interactions?.raw) ia.push(meta.interactions.raw);
+  if (ia.length > 0) parts.push(ia.join('/'));
+  if (parts.length === 0) return null;
+  return <p className="story-meta">{parts.join(' ｜ ')}</p>;
+}
+
+function SourceSpread({ linked }: { linked: RawItem[] | null }) {
+  if (!linked || linked.length === 0) return null;
+  const counts = new Map<string, number>();
+  for (const item of linked) counts.set(item.sourceName, (counts.get(item.sourceName) ?? 0) + 1);
+  return (
+    <div className="source-line">
+      来源分布：{[...counts.entries()].map(([name, n]) => `${name}×${n}`).join(' · ')}（共 {linked.length} 条）
+    </div>
+  );
 }
 
 function EvidenceBadge({ verification }: { verification?: Hotspot['verification'] }) {
@@ -219,11 +336,15 @@ function ClippingDrawer({
   onClose,
   onFeedback,
   onPoster,
+  reasonOpen,
+  onToggleReason,
 }: {
   hotspot: Hotspot;
   onClose: () => void;
   onFeedback: (text: string, ok: boolean) => void;
   onPoster: (h: Hotspot) => void;
+  reasonOpen: boolean;
+  onToggleReason: () => void;
 }) {
   const [linked, setLinked] = useState<RawItem[] | null>(null);
 
@@ -287,13 +408,24 @@ function ClippingDrawer({
             ))}
           </>
         )}
-        <p className="drawer-summary">{hotspot.summary || '（本条为 Mock 规则简报，暂无摘要。接入 AI 后自动补全。）'}</p>
+        <p className="drawer-summary">
+          <span className="drawer-kicker">AI 提炼</span>
+          {hotspot.summary || '（本条为 Mock 规则简报，暂无摘要。接入 AI 后自动补全。）'}
+        </p>
         {hotspot.entities.length > 0 && (
           <div style={{ marginBottom: 16 }}>
             {hotspot.entities.map((e) => (
               <span key={e} className="entity-chip">{e}</span>
             ))}
           </div>
+        )}
+        {typeof hotspot.relevance === 'number' && hotspot.relevanceReason && (
+          <>
+            <div className="section-title" style={{ margin: '14px 0 8px' }}>
+              相关度 {hotspot.relevance}/100
+            </div>
+            <RelevanceReason hotspot={hotspot} open={reasonOpen} onToggle={onToggleReason} />
+          </>
         )}
         <div className="drawer-actions">
           <button className="btn" onClick={copyClipping}>
@@ -312,17 +444,30 @@ function ClippingDrawer({
           </button>
         </div>
         <div className="section-title" style={{ marginBottom: 10 }}>来源线索</div>
+        <SourceSpread linked={linked} />
         {linked === null && <div className="source-line">检索存档中…</div>}
         {linked?.length === 0 && <div className="source-line">（原始条目已滚动淘汰）</div>}
         {linked?.map((item) => (
           <div key={item.id} className="source-line">
-            [{item.sourceName}] {item.title}
-            {item.heat ? ` · 热度 ${item.heat}` : ''}
-            {item.url && (
-              <>
-                {' '}
-                <a href={item.url} target="_blank" rel="noreferrer">原文↗</a>
-              </>
+            <div>
+              [{item.sourceName}] {item.title}
+              {typeof item.rank === 'number' ? ` · 榜单第${item.rank}位` : ''}
+              {item.heat ? ` · 热度 ${formatHits(item.heat)}` : ''}
+              {item.extra ? ` · ${item.extra}` : ''}
+              {item.url && (
+                <>
+                  {' '}
+                  <a href={item.url} target="_blank" rel="noreferrer">原文↗</a>
+                </>
+              )}
+            </div>
+            <TimeMeta publishedAt={item.publishedAt} fetchedAt={item.fetchedAt} />
+            <InteractionMeta item={item} />
+            {item.text && (
+              <div className="origin-text">
+                <span className="origin-kicker">原始描述：</span>
+                {item.text.slice(0, 160)}
+              </div>
             )}
           </div>
         ))}
@@ -342,6 +487,30 @@ export function GazetteBoard() {
   const [notice, setNotice] = useState<{ text: string; ok: boolean } | null>(null);
   const [filter, setFilter] = useState<TrendFilter>('all');
   const [poster, setPoster] = useState<{ url: string; name: string } | null>(null);
+  /** 相关理由展开状态：一键展开/折叠写入 set */
+  const [openReasonIds, setOpenReasonIds] = useState<Set<string>>(new Set());
+  const [allReasonsOpen, setAllReasonsOpen] = useState(false);
+
+  const hasRelevance = (snapshot?.hotspots ?? []).some((h) => typeof h.relevance === 'number');
+
+  const toggleReason = (id: string) => {
+    setOpenReasonIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllReasons = () => {
+    const nextOpen = !allReasonsOpen;
+    setAllReasonsOpen(nextOpen);
+    setOpenReasonIds(
+      nextOpen
+        ? new Set((snapshot?.hotspots ?? []).filter((h) => h.relevanceReason).map((h) => h.id))
+        : new Set(),
+    );
+  };
 
   const loadLatest = () => {
     fetch('/api/snapshots?limit=1')
@@ -518,6 +687,11 @@ export function GazetteBoard() {
               <span className="n">{countOf(key)}</span>
             </button>
           ))}
+          {hasRelevance && (
+            <button className="tab" onClick={toggleAllReasons} title="一键展开/折叠所有帖子的相关性理由">
+              {allReasonsOpen ? '▾ 折叠所有理由' : '▸ 展开所有理由'}
+            </button>
+          )}
         </div>
       )}
 
@@ -548,11 +722,18 @@ export function GazetteBoard() {
             {headline.title}
           </div>
           <p className="extra-summary">{headline.summary}</p>
+          <CardMeta hotspot={headline} />
           <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <EvidenceBadge verification={headline.verification} />
+            <RelevanceBadge hotspot={headline} />
             <TrendStamp trend={headline.trend} delta={headline.delta} />
             <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-faint)' }}>点击标题查看剪报 / 右侧可一键分享</span>
           </div>
+          <RelevanceReason
+            hotspot={headline}
+            open={openReasonIds.has(headline.id)}
+            onToggle={() => toggleReason(headline.id)}
+          />
         </section>
       )}
 
@@ -603,9 +784,16 @@ export function GazetteBoard() {
                       <h3 className="lead-title" onClick={() => setSelected(lead)}>
                         <span className="story-underline min-w-0 flex-1">{lead.title}</span>
                         <EvidenceBadge verification={lead.verification} />
+                        <RelevanceBadge hotspot={lead} />
                         <TrendStamp trend={lead.trend} delta={lead.delta} />
                       </h3>
                       <p className="lead-summary">{lead.summary}</p>
+                      <CardMeta hotspot={lead} />
+                      <RelevanceReason
+                        hotspot={lead}
+                        open={openReasonIds.has(lead.id)}
+                        onToggle={() => toggleReason(lead.id)}
+                      />
                     </WobbleCard>
                   </div>
                   {tail.length > 0 && (
@@ -622,9 +810,16 @@ export function GazetteBoard() {
                           >
                             <span className="story-underline min-w-0 flex-1">{hotspot.title}</span>
                             <EvidenceBadge verification={hotspot.verification} />
+                            <RelevanceBadge hotspot={hotspot} />
                             <TrendStamp trend={hotspot.trend} delta={hotspot.delta} />
                           </h3>
                           <p className="story-summary">{hotspot.summary}</p>
+                          <CardMeta hotspot={hotspot} />
+                          <RelevanceReason
+                            hotspot={hotspot}
+                            open={openReasonIds.has(hotspot.id)}
+                            onToggle={() => toggleReason(hotspot.id)}
+                          />
                         </FocusCard>
                       ))}
                     </FocusCards>
@@ -664,6 +859,8 @@ export function GazetteBoard() {
           onClose={() => setSelected(null)}
           onFeedback={feedback}
           onPoster={makePoster}
+          reasonOpen={openReasonIds.has(selected.id)}
+          onToggleReason={() => toggleReason(selected.id)}
         />
       )}
 

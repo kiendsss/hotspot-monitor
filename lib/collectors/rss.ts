@@ -9,13 +9,14 @@ const parser = new Parser({
   },
 });
 
-/** 解析单个 RSS 源。RSS 没有平台热度概念，heat 留空：是否算热点完全交给搜索引擎佐证层判定 */
+/** RSS 没有平台热度概念，heat 留空：是否算热点完全交给搜索引擎佐证层判定。发布时间取 pubDate/isoDate */
 export async function collectRssFeed(feed: RssFeed): Promise<{ items: RawItem[] }> {
   const parsed = await parser.parseURL(feed.url);
   const now = Date.now();
   const items: RawItem[] = (parsed.items ?? []).slice(0, 30).map((entry, index) => {
     const title = (entry.title ?? '').trim();
     const contentHtml = entry.contentSnippet ?? entry.content ?? '';
+    const published = entry.isoDate ? Date.parse(entry.isoDate) : entry.pubDate ? Date.parse(entry.pubDate) : NaN;
     return {
       id: `rss_${feed.id}_${now}_${index}_${title.slice(0, 20)}`,
       sourceId: 'rss' as const,
@@ -25,6 +26,7 @@ export async function collectRssFeed(feed: RssFeed): Promise<{ items: RawItem[] 
       url: entry.link,
       rank: index + 1,
       extra: 'RSS',
+      publishedAt: Number.isFinite(published) ? published : undefined,
       fetchedAt: now,
     };
   }).filter((i) => i.title);

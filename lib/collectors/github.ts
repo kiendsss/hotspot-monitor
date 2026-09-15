@@ -8,6 +8,7 @@ export async function collectGithub(): Promise<{ items: RawItem[] }> {
   const $ = cheerio.load(html);
   const now = Date.now();
   const items: RawItem[] = [];
+  let rank = 0;
 
   $('article.Box-row').each((index, el) => {
     const repoPath = $(el).find('h2 a').attr('href')?.trim();
@@ -19,6 +20,7 @@ export async function collectGithub(): Promise<{ items: RawItem[] }> {
     // 今日 star：「1,234 stars today」
     const todayStarsText = $(el).find('span.d-inline-block.float-sm-right').text().trim();
     const todayStars = Number(todayStarsText.replace(/\D/g, '')) || undefined;
+    rank += 1;
     items.push({
       id: `github_${now}_${index + 1}_${title.replace('/', '_')}`,
       sourceId: 'github',
@@ -26,9 +28,10 @@ export async function collectGithub(): Promise<{ items: RawItem[] }> {
       title,
       text: desc.slice(0, 200) || undefined,
       url: `https://github.com${repoPath}`,
-      rank: index + 1,
+      rank,
       heat: todayStars,
       extra: [language, starsText ? `★${starsText}` : ''].filter(Boolean).join(' · ') || undefined,
+      interactions: todayStars ? { raw: `今日 +${todayStars} star` } : undefined,
       fetchedAt: now,
     });
   });

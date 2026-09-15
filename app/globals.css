@@ -986,6 +986,73 @@ button {
   }
 }
 
+/* V3-a 卡片元信息与相关度理由（免跳转判断信息价值） */
+.story-meta {
+  margin: 6px 0 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  overflow-wrap: anywhere;
+}
+
+.reason-row {
+  margin-top: 8px;
+}
+
+.reason-toggle {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  padding: 2px 10px;
+  border: 1px dashed var(--line);
+  background: transparent;
+  color: var(--ink-soft);
+}
+
+.reason-toggle:hover {
+  background: var(--paper-dark);
+}
+
+.reason-toggle:focus-visible {
+  outline: 1.5px solid var(--red);
+  outline-offset: 2px;
+}
+
+.reason-body {
+  margin-top: 7px;
+  padding: 8px 11px;
+  border-left: 3px solid var(--red);
+  background: rgba(235, 228, 211, 0.55);
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+/* V3-a 抽屉摘要标注：区分 AI 提炼与原始描述 */
+.drawer-kicker {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--red);
+  letter-spacing: 0.25em;
+  margin-bottom: 4px;
+}
+
+.origin-text {
+  margin-top: 4px;
+  color: var(--ink-soft);
+  font-family: var(--serif);
+}
+
+.origin-kicker {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
 /* V2-j 徽章与条头（TrendStamp / story-top 落格） */
 .stamp {
   display: inline-flex;

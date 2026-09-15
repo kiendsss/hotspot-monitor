@@ -31,6 +31,7 @@ export default function SettingsPage() {
   const [minEngines, setMinEngines] = useState(1);
   const [minHits, setMinHits] = useState(5);
   const [requireCrossSource, setRequireCrossSource] = useState(true);
+  const [interestText, setInterestText] = useState('');
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ text: string; ok: boolean } | null>(null);
 
@@ -48,6 +49,7 @@ export default function SettingsPage() {
             setMinHits(d.settings.quality.minHits ?? 5);
             setRequireCrossSource(d.settings.quality.requireCrossSource ?? true);
           }
+          setInterestText((d.settings.interestKeywords ?? []).join('，'));
         }
       })
       .catch(() => {});
@@ -61,6 +63,7 @@ export default function SettingsPage() {
         model,
         mockMode,
         quality: { verifyEnabled, minEngines, minHits, requireCrossSource },
+        interestKeywords: interestText.split(/[,，、\s]+/).map((s) => s.trim()).filter(Boolean),
       };
       if (keyInput.trim()) body.openrouterKey = keyInput.trim();
       const data = await fetch('/api/settings', {
@@ -108,6 +111,18 @@ export default function SettingsPage() {
               {!PRESET_MODELS.includes(model) && <option value={model}>{model}</option>}
             </select>
             <span className="hint">生成日报时由该模型聚合识别热点；不选则使用默认 deepseek-chat</span>
+          </div>
+          <div className="field">
+            <label>兴趣关键词（用于 AI 相关度评分）</label>
+            <input
+              type="text"
+              placeholder="用逗号分隔，如：AI, 编程, 出海, 新能源车"
+              value={interestText}
+              onChange={(e) => setInterestText(e.target.value)}
+            />
+            <span className="hint">
+              生成日报时 AI 会按这些词给每个热点打相关度分并给出理由（0-100），头版可展开查看；留空则不展示相关度。保存后下一期日报生效。
+            </span>
           </div>
           <div className="field">
             <label>

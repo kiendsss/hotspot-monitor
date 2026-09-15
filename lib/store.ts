@@ -33,6 +33,7 @@ export const DEFAULT_SETTINGS: Settings = {
   builtinSources: { weibo: true, zhihu: true, baidu: true, github: true },
   sourceLimits: DEFAULT_SOURCE_LIMITS,
   quality: DEFAULT_QUALITY,
+  interestKeywords: [],
 };
 
 export const EMPTY_DB: DbData = { items: [], snapshots: [] };

@@ -24,6 +24,7 @@ interface SettingsBody {
   builtinSources?: Partial<Settings['builtinSources']>;
   sourceLimits?: Partial<Settings['sourceLimits']>;
   quality?: Partial<Settings['quality']>;
+  interestKeywords?: string[];
 }
 
 function mask(key: string): string {
@@ -69,6 +70,13 @@ export async function POST(request: NextRequest) {
     }
     if (body.model) settings.model = body.model;
     if (typeof body.mockMode === 'boolean') settings.mockMode = body.mockMode;
+    if (Array.isArray(body.interestKeywords)) {
+      settings.interestKeywords = body.interestKeywords
+        .filter((kw): kw is string => typeof kw === 'string')
+        .map((kw) => kw.trim())
+        .filter(Boolean)
+        .slice(0, 30);
+    }
     if (body.openrouterKey !== undefined && body.openrouterKey !== '') {
       settings.openrouterKey = body.openrouterKey;
     }

@@ -1,4 +1,4 @@
-import type { QualitySettings, RawItem, Settings, Verification } from './types';
+import type { QualitySettings, RawItem, Settings, SourceId, Verification } from './types';
 import { bucketKey } from './bucket';
 import { verifyTitles } from './verify/cache';
 
@@ -7,6 +7,8 @@ export interface CandidateBucket {
   title: string;
   items: RawItem[];
   distinctSources: number;
+  /** 桶内最高热度条目的来源；跨源桶为 'cross' */
+  sourceId: SourceId | 'cross';
   /** 桶内是否有带平台热度的来源（榜单） */
   hasHeatSource: boolean;
   /** 排序用热度：榜单取桶内最高 heat，纯 RSS/手动桶按跨源数折算 */
@@ -14,7 +16,13 @@ export interface CandidateBucket {
   verification?: Verification;
 }
 
-/** 预聚合分桶：桶内最高平台热度排序，取头部候选送搜索引擎核验 */
+/** 各源保底候选数：知乎热度千万级、GitHub 仅百星，纯按 heat 全局排序会被单源吃满 */
+const PER_SOURCE_FLOOR = 5;
+
+/**
+ * 预聚合分桶 + 分源保底配额：先给每个有热度的源留 PER_SOURCE_FLOOR 个席位，
+ * 剩余席位再按全局热度补满，最后统一按热度排序送核验。
+ */
 export function bucketize(items: RawItem[], maxCandidates = 30): CandidateBucket[] {
   const map = new Map<string, RawItem[]>();
   for (const item of items) {
@@ -25,17 +33,59 @@ export function bucketize(items: RawItem[], maxCandidates = 30): CandidateBucket
     else map.set(key, [item]);
   }
 
-  return [...map.entries()]
+  const all = [...map.entries()]
     .map(([key, bucketItems]): CandidateBucket => {
       const primary = bucketItems.reduce((a, b) => ((b.heat ?? 0) > (a.heat ?? 0) ? b : a));
       const distinctSources = new Set(bucketItems.map((i) => i.sourceId)).size;
       const maxHeat = Math.max(...bucketItems.map((i) => i.heat ?? 0));
       // 纯 RSS/手动桶无平台热度：单条来稿 0 分自然沉底，多源佐证才冒头
-      const heatScore = maxHeat > 0 ? maxHeat : (distinctSources >= 2 ? distinctSources * 1_000 : 0);
-      return { key, title: primary.title, items: bucketItems, distinctSources, hasHeatSource: maxHeat > 0, heatScore };
+      const heatScore = maxHeat > 0 ? maxHeat : distinctSources >= 2 ? distinctSources * 1_000 : 0;
+      return {
+        key,
+        title: primary.title,
+        items: bucketItems,
+        sourceId: distinctSources >= 2 ? 'cross' : primary.sourceId,
+        distinctSources,
+        hasHeatSource: maxHeat > 0,
+        heatScore,
+      };
     })
-    .sort((a, b) => b.heatScore - a.heatScore)
-    .slice(0, maxCandidates);
+    .sort((a, b) => b.heatScore - a.heatScore);
+
+  return applySourceQuota(all, maxCandidates);
+}
+
+/** 分源保底 + 全局补位；heatScore=0 的单源来稿不占保底席位（必被质量门槛淘汰） */
+function applySourceQuota(sorted: CandidateBucket[], maxCandidates: number): CandidateBucket[] {
+  const picked: CandidateBucket[] = [];
+  const taken = new Set<string>();
+  const bump = (bucket: CandidateBucket) => {
+    taken.add(bucket.key);
+    picked.push(bucket);
+  };
+
+  const groups = new Map<SourceId | 'cross', CandidateBucket[]>();
+  for (const bucket of sorted) {
+    if (bucket.heatScore <= 0) continue;
+    const list = groups.get(bucket.sourceId);
+    if (list) list.push(bucket);
+    else groups.set(bucket.sourceId, [bucket]);
+  }
+
+  for (const list of groups.values()) {
+    for (const bucket of list.slice(0, PER_SOURCE_FLOOR)) {
+      if (picked.length >= maxCandidates) break;
+      bump(bucket);
+    }
+  }
+
+  for (const bucket of sorted) {
+    if (picked.length >= maxCandidates) break;
+    if (taken.has(bucket.key)) continue;
+    bump(bucket);
+  }
+
+  return picked.sort((a, b) => b.heatScore - a.heatScore);
 }
 
 export interface PipelineResult {

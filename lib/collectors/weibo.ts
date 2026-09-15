@@ -5,6 +5,7 @@ import { fetchJson, fetchText } from './fetch';
 interface WeiboCard {
   mblog?: {
     text?: string;
+    /** 历史字段：当前热搜接口多数卡片无 mblog，有则解析（形如 "Mon Sep 14 10:00:00 +0800 2026"） */
     created_at?: string;
   };
   word_scheme?: string;
@@ -14,6 +15,9 @@ interface WeiboCard {
   num?: number;
   rank?: number;
   realpos?: number;
+  /** 榜单上榜时间戳（秒）：当前热搜接口不返回，有则解析 */
+  timestamp?: number;
+  on_board_time?: number;
   label_name?: string;
   category?: string;
   is_ad?: number;
@@ -45,6 +49,13 @@ export async function collectWeibo(): Promise<{ items: RawItem[] }> {
     rank += 1;
     const heat = card.raw_hot ?? card.num ?? undefined;
     const label = card.label_name ?? card.mblog?.text?.match(/class="surl-text">([^<]+)</)?.[1];
+    // 热搜榜本身是“榜单上榜”概念，接口不返回词条发布时间；
+    // 仅当卡片携带 mblog.created_at / timestamp 类字段时才记录，其余留空由前端显示“榜单未提供”
+    const createdAt = card.mblog?.created_at ? Date.parse(card.mblog.created_at) : NaN;
+    const boardTs = [card.timestamp, card.on_board_time]
+      .filter((t): t is number => typeof t === 'number' && t > 0)
+      .map((t) => (t < 1e12 ? t * 1000 : t))[0];
+    const publishedAt = Number.isFinite(createdAt) ? createdAt : boardTs;
     items.push({
       id: `weibo_${now}_${rank}_${title.slice(0, 20)}`,
       sourceId: 'weibo',
@@ -55,6 +66,7 @@ export async function collectWeibo(): Promise<{ items: RawItem[] }> {
       rank,
       heat,
       extra: label,
+      publishedAt,
       fetchedAt: now,
     });
   }
