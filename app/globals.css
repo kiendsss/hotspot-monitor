@@ -176,36 +176,46 @@ button {
   color: var(--ink-faint);
 }
 
-.howto ol {
+.howto-steps {
   list-style: none;
   counter-reset: step;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+  gap: 0;
+}
+
+.howto-steps li {
+  counter-increment: step;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-top: 4px;
-}
-
-.howto li {
-  counter-increment: step;
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-  font-size: 14px;
-  line-height: 1.9;
+  padding: 14px 14px 12px;
+  border-right: 1px solid rgba(42, 37, 29, 0.12);
+  font-size: 13px;
+  line-height: 1.8;
   color: var(--ink-soft);
   overflow-wrap: anywhere;
 }
 
-.howto li::before {
-  content: counter(step, cjk-ideographic) '、';
-  flex-shrink: 0;
-  font-weight: 900;
-  color: var(--red);
-  font-size: 15px;
+.howto-steps li:last-child {
+  border-right: none;
 }
 
-.howto li b {
+.howto-steps li::before {
+  content: 'STEP 0' counter(step);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--red);
+  font-weight: 700;
+}
+
+.howto-steps li b {
   color: var(--ink);
+  font-size: 14px;
+  letter-spacing: 0.04em;
 }
 
 .howto li code,
@@ -232,17 +242,40 @@ button {
 }
 
 /* ===== 移动端响应式适配（<=720px 单列 + 工具条堆叠 + 触控放大） ===== */
+@media (max-width: 960px) {
+  .howto-steps {
+    grid-template-columns: 1fr 1fr;
+  }
+  .howto-steps li:nth-child(2) {
+    border-right: none;
+  }
+  .howto-steps li:nth-child(n+3) {
+    border-top: 1px solid rgba(42, 37, 29, 0.12);
+  }
+}
+
+@media (max-width: 560px) {
+  .howto-steps {
+    grid-template-columns: 1fr;
+  }
+  .howto-steps li {
+    border-right: none;
+    border-top: 1px solid rgba(42, 37, 29, 0.12);
+  }
+  .howto-steps li:first-child {
+    border-top: none;
+  }
+}
+
 @media (max-width: 720px) {
   .howto {
     margin: 16px 0 20px;
     padding: 14px 14px 12px;
   }
-  .howto li {
-    font-size: 13px;
-    line-height: 1.85;
-  }
-  .howto ol.howto-steps {
-    gap: 4px;
+  .howto-steps li {
+    font-size: 12.5px;
+    line-height: 1.8;
+    padding: 12px 12px 10px;
   }
   /* 工具条纵向堆叠，按钮全宽方便拇指点 */
   .toolbar {
@@ -536,7 +569,7 @@ button {
 .ticker {
   display: inline-block;
   padding: 9px 0;
-  animation: ticker-scroll 36s linear infinite;
+  animation: ticker-scroll 90s linear infinite;
 }
 
 .ticker:hover {
