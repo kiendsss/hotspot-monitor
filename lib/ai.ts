@@ -3,7 +3,7 @@ import type { Hotspot, HotspotCategory, RawItem } from './types';
 import { bucketKey, normalizeTitle } from './bucket';
 
 const APP_TITLE = 'Hotspot Gazette';
-const APP_URL = 'http://localhost:3000';
+const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 
 /** 按 key 前缀识别供应商：sk-or-v1-*=OpenRouter；sk-*=DeepSeek 官方（两者均为 OpenAI 兼容协议） */
 export function resolveProvider(apiKey: string): {

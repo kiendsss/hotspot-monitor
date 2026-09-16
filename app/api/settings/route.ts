@@ -1,18 +1,23 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSettings, saveSettings } from '@/lib/store';
+import { resolveAiConfig } from '@/lib/env';
 import type { Settings } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
-/** GET /api/settings：读取设置（Key 脱敏返回） */
+/** GET /api/settings：读取设置（Key 脱敏返回；env Key 只报存在，不落盘） */
 export async function GET() {
   const settings = await getSettings();
+  const envKey = resolveAiConfig({ settingsKey: settings.openrouterKey });
   return NextResponse.json({
     ok: true,
     settings: {
       ...settings,
+      aiKey: undefined,
       openrouterKey: settings.openrouterKey ? mask(settings.openrouterKey) : undefined,
-      hasKey: Boolean(settings.openrouterKey),
+      hasKey: Boolean(settings.openrouterKey) || envKey.keySource === 'env',
+      keySource: envKey.keySource,
+      effectiveMock: envKey.mock,
     },
   });
 }
@@ -38,7 +43,7 @@ function clampInt(value: unknown, min: number, max: number, fallback: number): n
   return Math.max(min, Math.min(max, Math.round(value)));
 }
 
-/** POST /api/settings：更新设置（榜单源开关等；Key/模型/Mock 在 Loop 2 接入） */
+/** POST /api/settings：更新设置（榜单源开关等；env 配置的 Key 优先于页面 Key） */
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as SettingsBody;
@@ -81,12 +86,20 @@ export async function POST(request: NextRequest) {
       settings.openrouterKey = body.openrouterKey;
     }
     await saveSettings(settings);
+    const ai = resolveAiConfig({
+      settingsKey: settings.openrouterKey,
+      storedModel: settings.model,
+      mockMode: settings.mockMode,
+    });
     return NextResponse.json({
       ok: true,
       settings: {
         ...settings,
+        aiKey: undefined,
         openrouterKey: settings.openrouterKey ? mask(settings.openrouterKey) : undefined,
-        hasKey: Boolean(settings.openrouterKey),
+        hasKey: Boolean(settings.openrouterKey) || ai.keySource === 'env',
+        keySource: ai.keySource,
+        effectiveMock: ai.mock,
       },
     });
   } catch (error) {

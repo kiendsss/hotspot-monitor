@@ -4,10 +4,12 @@ import { analyzeHotspots } from '@/lib/ai';
 import { attachTrends } from '@/lib/trend';
 import { selectCandidates } from '@/lib/pipeline';
 import { bucketKey } from '@/lib/bucket';
+import { resolveAiConfig } from '@/lib/env';
 import type { Hotspot, HotspotMeta, ItemInteractions, RawItem, Snapshot } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 120;
+// Vercel Hobby 实测上限 60s：超时由平台截断，前端按错误提示重试
+export const maxDuration = 60;
 
 /** 热点最终热度 = 模型/AI 热度与搜索佐证分加权融合 */
 function blendHeat(modelHeat: number, verifyScore: number | undefined): number {
@@ -57,8 +59,14 @@ export async function POST() {
     }
 
     // 阶段一：预聚合 + 搜索引擎交叉验证，仅通过门槛的候选送分析（省 token、挡尾部噪声）
+    // Serverless 上验证默认关闭（store.getSettings 已强制），避免 4 引擎抓取拖超时
     const pipeline = await selectCandidates(db.items, settings);
-    const apiKey = settings.openrouterKey && !settings.mockMode ? settings.openrouterKey : undefined;
+    // 渐进式增强：env Key > 设置页 Key > 无 Key(Mock)；env Key 无视 mockMode，保证线上配了 Key 即真实 AI
+    const ai = resolveAiConfig({
+      settingsKey: settings.openrouterKey,
+      storedModel: settings.model,
+      mockMode: settings.mockMode,
+    });
 
     // 候选桶索引：AI 复述 id 失真时按桶补全/兜底，也供 meta 聚合
     const itemsByKey = new Map<string, RawItem[]>();
@@ -78,8 +86,8 @@ export async function POST() {
     // 阶段二：AI/Mock 聚合识别
     const output = await analyzeHotspots({
       items: pipeline.selected,
-      model: settings.model,
-      apiKey,
+      model: ai.model,
+      apiKey: ai.apiKey,
       interestKeywords: settings.interestKeywords?.filter((kw) => kw.trim()) ?? [],
       bucketsForFallback,
     });

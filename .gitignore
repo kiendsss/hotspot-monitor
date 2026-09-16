@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # runtime data (db.json / settings.json, settings may hold API keys)
 /data

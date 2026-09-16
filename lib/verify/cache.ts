@@ -1,10 +1,8 @@
-import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
 import type { Verification } from '../types';
+import { getVerifyCache, saveVerifyCache } from '../store';
 import { searchAll } from './engines';
 import { computeVerification } from './score';
 
-const CACHE_PATH = join(process.cwd(), 'data', 'verify-cache.json');
 /** 单次分析验证的候选上限：只核验预聚合头部，避免 4 引擎 × 全量标题刷太久 */
 export const MAX_VERIFY_CANDIDATES = 30;
 /** 引擎并发上限：节流是为避免被反爬 */
@@ -17,10 +15,14 @@ interface CacheEntry {
 
 type CacheMap = Record<string, CacheEntry>;
 
+/**
+ * 交叉验证缓存读写走存储抽象（本地 data/verify-cache.json / 线上 Vercel KV）。
+ * 原因：Serverless 文件只读，直接读写 data 目录会 500。
+ * 写失败不阻塞主链路，下次再查一次引擎即可。
+ */
 async function readCache(): Promise<CacheMap> {
   try {
-    const raw = await readFile(CACHE_PATH, 'utf8');
-    return JSON.parse(raw) as CacheMap;
+    return (await getVerifyCache()) as CacheMap;
   } catch {
     return {};
   }
@@ -28,10 +30,7 @@ async function readCache(): Promise<CacheMap> {
 
 async function writeCache(cache: CacheMap): Promise<void> {
   try {
-    await mkdir(dirname(CACHE_PATH), { recursive: true });
-    const tmp = `${CACHE_PATH}.${process.pid}.tmp`;
-    await writeFile(tmp, JSON.stringify(cache, null, 2), 'utf8');
-    await rename(tmp, CACHE_PATH);
+    await saveVerifyCache(cache);
   } catch {
     // 缓存写失败不阻塞主链路，下次再查一次引擎即可
   }

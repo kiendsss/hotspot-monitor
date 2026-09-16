@@ -1,5 +1,6 @@
 import type { Hotspot, KeywordTopic, RawItem, Settings, TopicReport, TrackInterval } from '../types';
 import { analyzeHotspots } from '../ai';
+import { resolveAiConfig } from '../env';
 import { collectTopic, mergeTopicItems } from './search';
 import { getDb, makeId, saveDb } from '../store';
 
@@ -41,11 +42,16 @@ export async function grabTopic(topic: KeywordTopic): Promise<{ topic: KeywordTo
 /** 对专题条目跑 AI/Mock 分析，产出专题报告（不进头版快照序列） */
 export async function analyzeTopic(topic: KeywordTopic, settings: Settings): Promise<{ topic: KeywordTopic; hotspots: Hotspot[]; model: string; mock: boolean }> {
   if (topic.items.length === 0) throw new Error('专题暂无素材，请先抓取');
-  const apiKey = settings.openrouterKey && !settings.mockMode ? settings.openrouterKey : undefined;
+  // 渐进式增强：env Key > 设置页 Key > 无 Key(Mock)，与头版 /api/analyze 同一规则
+  const ai = resolveAiConfig({
+    settingsKey: settings.openrouterKey,
+    storedModel: settings.model,
+    mockMode: settings.mockMode,
+  });
   const output = await analyzeHotspots({
     items: topic.items,
-    model: settings.model,
-    apiKey,
+    model: ai.model,
+    apiKey: ai.apiKey,
     // 专题条目天然同主题：不喂佐证摘要，也不做跨源淘汰，让模型直接聚合
     interestKeywords: settings.interestKeywords?.filter((kw) => kw.trim()) ?? [],
   });

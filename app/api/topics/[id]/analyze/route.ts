@@ -3,7 +3,7 @@ import { getDb, getSettings, saveDb } from '@/lib/store';
 import { analyzeTopic } from '@/lib/topics/service';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 /** POST /api/topics/[id]/analyze：用专题条目跑 AI/Mock 分析并保存独立报告。 */
 export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
