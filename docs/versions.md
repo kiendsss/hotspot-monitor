@@ -36,6 +36,7 @@
 | v2-r | 3671f7e | V2-r small-screen masthead & extra rhythm (720px) | build ok 1275ms, pending man | git diff v2-q..HEAD / checkout 3671f7e |
 | v3 | c955bfe (code f22ecc7) | Loop5 source reliability: per-source tail filter (TopN+minHeat) + 4-engine search verification (Bing web / Baidu web / Baidu news / Sogou) + evidence badges & drawer | smoke PASS 2026-09-14 | git checkout v3 / diff v2-r..v3 |
 | v3-a | 8bad51a (code b168f78) | Info density: publishedAt/fetchedAt/interactions on cards + AI relevance score & collapsible reason (interestKeywords in settings) + per-source candidate quota + AI itemId fallback | tsc+build+e2e PASS 2026-09-15 | git checkout v3-a / diff v3..v3-a / reset --hard v3 |
+| v3-b | pending push | Keyword topics: per-keyword search collect (4 engines + weibo search) + independent AI report + auto-track scheduler +立项即分析 | man PASS 2026-09-16 | git diff v3-a..HEAD / reset --hard v3-a |
 
 ## Changelog files
 
@@ -61,6 +62,7 @@
 | docs/ui-changelog/v2-q.md | 0f0c4be | small-screen plate rhythm (720px) |
 | docs/ui-changelog/v2-r.md | 3671f7e | small-screen masthead & extra rhythm (720px) |
 | docs/ui-changelog/v3-a.md | 8bad51a (code b168f78) | publishedAt/interactions/relevance+reason + source quota + id fallback |
+| docs/ui-changelog/v3-b.md | pending push | keyword topics + independent AI reports + auto-track scheduler + initial collect/analyze |
 
 ## How to start next version
 

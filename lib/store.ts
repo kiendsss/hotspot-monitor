@@ -10,6 +10,10 @@ const SETTINGS_PATH = join(DATA_DIR, 'settings.json');
 const MAX_ITEMS = 2000;
 /** 快照保留上限 */
 const MAX_SNAPSHOTS = 100;
+/** 单个专题素材条目上限（新增在尾部） */
+const MAX_TOPIC_ITEMS = 500;
+/** 单份专题报告热点数上限（按热度排序后裁剪） */
+const MAX_TOPIC_HOTSPOTS = 30;
 
 export const DEFAULT_SOURCE_LIMITS: Record<'weibo' | 'zhihu' | 'baidu' | 'github', { topN: number; minHeat: number }> = {
   weibo: { topN: 30, minHeat: 100000 },
@@ -36,7 +40,7 @@ export const DEFAULT_SETTINGS: Settings = {
   interestKeywords: [],
 };
 
-export const EMPTY_DB: DbData = { items: [], snapshots: [] };
+export const EMPTY_DB: DbData = { items: [], snapshots: [], topics: [] };
 
 async function readJson<T>(path: string, fallback: T): Promise<T> {
   try {
@@ -63,6 +67,14 @@ export async function saveDb(db: DbData): Promise<void> {
   const trimmed: DbData = {
     items: db.items.slice(-MAX_ITEMS),
     snapshots: db.snapshots.slice(-MAX_SNAPSHOTS),
+    // 专题条目/报告各自裁剪，避免单个长追踪专题撑爆 db.json
+    topics: (db.topics ?? []).map((t) => ({
+      ...t,
+      items: t.items.slice(-MAX_TOPIC_ITEMS),
+      report: t.report
+        ? { ...t.report, hotspots: t.report.hotspots.slice(0, MAX_TOPIC_HOTSPOTS) }
+        : undefined,
+    })),
   };
   await writeJson(DB_PATH, trimmed);
 }

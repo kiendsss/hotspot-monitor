@@ -65,6 +65,9 @@ export function Masthead() {
           <Link href="/sources">
             采编部<small>SOURCES</small>
           </Link>
+          <Link href="/topics">
+            专题追踪<small>SPECIAL</small>
+          </Link>
           <Link href="/settings">
             印务设置<small>SETTINGS</small>
           </Link>

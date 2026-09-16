@@ -4,7 +4,8 @@ export type SourceId =
   | 'baidu'
   | 'github'
   | 'rss'
-  | 'manual';
+  | 'manual'
+  | 'search';
 
 /** 各采集源的尾部过滤阈值：榜单只保留前 topN 条，且平台原始热度不得低于 minHeat */
 export interface SourceLimit {
@@ -127,6 +128,8 @@ export interface EngineHit {
   /** 结果总数是否来自“约 X 个结果”类官方计数 */
   officialCount: boolean;
   error?: string;
+  /** v3-b 专题追踪：同一次解析提取的结果条目（验证层忽略，仅抓取用） */
+  entries?: { title: string; url?: string; text?: string }[];
 }
 
 /** 候选热点的交叉验证证据 */
@@ -192,8 +195,40 @@ export interface Settings {
   interestKeywords?: string[];
 }
 
+/** 专题追踪间隔档位（小时）：手动最小 1h，防反爬不设更细粒度 */
+export type TrackInterval = 1 | 6 | 12 | 24;
+
+/** 关键词专题：独立于头版快照的定向抓取 + AI 分析单元 */
+export interface KeywordTopic {
+  id: string;
+  keyword: string;
+  createdAt: number;
+  /** 最近一次抓取（手动或自动）时间 */
+  updatedAt: number;
+  /** 自动追踪开关：开启后由调度器按 trackIntervalHours 周期抓取 + 分析 */
+  autoTrack: boolean;
+  trackIntervalHours: TrackInterval;
+  /** 最近一次自动/手动执行完成时间（调度器判到期用） */
+  lastTrackedAt?: number;
+  /** 最近一次执行失败原因（抓取或分析），成功后清除 */
+  lastError?: string;
+  /** 专题素材条目（搜索引擎 + 微博站内搜索），按标题去重增量追加 */
+  items: RawItem[];
+  /** 最近一次分析报告：独立存放，不进头版快照序列 */
+  report?: TopicReport;
+}
+
+export interface TopicReport {
+  createdAt: number;
+  model: string;
+  mock: boolean;
+  hotspots: Hotspot[];
+}
+
 export interface DbData {
   /** 原始条目池，analyze 后裁剪，保留最近 N 条 */
   items: RawItem[];
   snapshots: Snapshot[];
+  /** 关键词专题（v3-b 新增，旧 db.json 缺失时视为空） */
+  topics?: KeywordTopic[];
 }
