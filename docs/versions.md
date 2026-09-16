@@ -16,6 +16,7 @@
 
 | Tag | Commit | Meaning | Verified | Commands |
 |-----|--------|---------|----------|----------|
+| v1.0 | 2e763c9 | 1.0 real-AI online: Storage get/set/append (Local/VercelKV auto-switch) + env-key mock fallback + serverless guards + portfolio | man 2026-09-16 | git checkout v1.0 |
 | v1-b (no tag yet) | dd9f269 | V1-B breathing + share | man | git checkout dd9f269 |
 | v2 | 97ca9c2 (incl 41b48db) | V2 newspaper plates + Wobble lead + Focus cards (Plan B) + utf-8 fix | PASS | git checkout v2 / reset --hard v2 |
 | v2-c | eba465a (incl 5a40b7d) | V2-c rhythm polish: plate TOC + lead red bar + spacing | PASS 2026-09-09 | git checkout v2-c |
